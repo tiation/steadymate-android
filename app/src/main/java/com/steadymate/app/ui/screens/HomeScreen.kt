@@ -230,7 +230,7 @@ private fun QuickActionsSection(
             QuickActionCard(
                 icon = Icons.Default.Person,
                 title = "Check-in",
-                subtitle = "Log your mood",
+                subtitle = "Log mood",
                 onClick = onNavigateToCheckIn,
                 color = MaterialTheme.colorScheme.primaryContainer,
                 modifier = Modifier.weight(1f)
