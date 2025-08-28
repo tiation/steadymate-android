@@ -21,6 +21,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Alignment
+import com.steadymate.app.ui.screens.ComingSoonScreen
 import com.steadymate.app.ui.screens.habits.HabitsScreen
 // Import actual screen implementations
 import com.steadymate.app.ui.screens.HomeScreen
@@ -29,9 +30,6 @@ import com.steadymate.app.ui.screens.crisis.CrisisScreen
 import com.steadymate.app.ui.screens.insights.InsightsScreen
 import com.steadymate.app.ui.screens.settings.SettingsScreen
 import com.steadymate.app.ui.screens.tools.ToolsScreen
-import com.steadymate.app.ui.screens.cbt.CBTReframeScreen
-import com.steadymate.app.ui.screens.cbt.CBTWorryTimerScreen
-import com.steadymate.app.ui.screens.cbt.CBTMicroWinsScreen
 
 /**
  * Main navigation composable for SteadyMate app
