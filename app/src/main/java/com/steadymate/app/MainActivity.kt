@@ -7,7 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
 import com.steadymate.app.navigation.SteadyMateNavigation
-import com.steadymate.app.ui.theme.SteadyMateTheme
+import com.steadymate.app.ui.theme.MasculineDarkTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -16,7 +16,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            SteadyMateTheme {
+            MasculineDarkTheme {
                 SteadyMateNavigation(
                     modifier = Modifier.fillMaxSize()
                 )

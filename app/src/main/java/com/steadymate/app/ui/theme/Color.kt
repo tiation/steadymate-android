@@ -89,6 +89,49 @@ object HighContrastColors {
     val HCDarkOutlineVariant = Color(0xFFCCCCCC) // Light gray outline
 }
 
+// Masculine Dark Mode Color Palette
+object MasculineDarkColors {
+    // Core brand colors - Strong and bold
+    val DeepCharcoal = Color(0xFF1A1D23)      // Main background - industrial dark
+    val StormGray = Color(0xFF2D3142)         // Surface - steel-like
+    val IronGray = Color(0xFF4F5D75)          // Secondary surface
+    val SteelBlue = Color(0xFF1E3A5F)         // Primary container
+    
+    // Primary colors - Electric blue with authority
+    val ElectricBlue = Color(0xFF00D4FF)      // Primary - electric, confident
+    val CyberBlue = Color(0xFF0099CC)         // Primary variant
+    val DeepElectric = Color(0xFF005577)      // Primary dark
+    
+    // Accent colors - Bold and commanding
+    val NeonGreen = Color(0xFF39FF14)         // Success/positive - high energy
+    val BurntOrange = Color(0xFFFF6B35)       // Warning - industrial orange
+    val CrimsonRed = Color(0xFFFF073A)        // Error - powerful red
+    val AmberYellow = Color(0xFFFFBF00)       // Info - golden amber
+    
+    // Text colors - High contrast and readable
+    val PureWhite = Color(0xFFFFFFFF)         // Primary text
+    val SilverGray = Color(0xFFBDBDBD)        // Secondary text
+    val DimGray = Color(0xFF757575)           // Tertiary text
+    val CarbonBlack = Color(0xFF121212)       // On light surfaces
+    
+    // Surface variations
+    val MidnightBlack = Color(0xFF0F1113)     // Darkest surface
+    val SlateGray = Color(0xFF353A42)         // Elevated surface
+    val GraphiteGray = Color(0xFF454B54)      // Card backgrounds
+    
+    // Status and feedback colors
+    val MatrixGreen = Color(0xFF00FF41)       // Success - matrix green
+    val VolcanicOrange = Color(0xFFFF4500)    // Warning - lava orange
+    val LaserRed = Color(0xFFFF1744)          // Danger - laser red
+    val ArcticBlue = Color(0xFF00FFFF)        // Info - cold blue
+    
+    // Container colors for status
+    val GreenContainer = Color(0xFF1A2F1A)    // Dark green container
+    val OrangeContainer = Color(0xFF2F1F0A)   // Dark orange container
+    val RedContainer = Color(0xFF2F1515)      // Dark red container
+    val BlueContainer = Color(0xFF0A1F2F)     // Dark blue container
+}
+
 // Status colors with accessibility considerations
 object StatusColors {
     val Success = Color(0xFF2E7D32)      // High contrast green
