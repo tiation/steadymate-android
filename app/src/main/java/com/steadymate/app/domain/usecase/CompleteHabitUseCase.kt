@@ -5,8 +5,12 @@ import com.steadymate.app.domain.repository.HabitTickRepository
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.CoroutineDispatcher
 import com.steadymate.app.di.DispatcherIO
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
+import kotlinx.datetime.Clock
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
+import kotlinx.datetime.toLocalDateTime
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -125,16 +129,16 @@ class CompleteHabitUseCase @Inject constructor(
     suspend fun getCurrentStreak(habitId: String): Int = withContext(ioDispatcher) {
         try {
             var streak = 0
-            var currentDate = LocalDate.now()
+            var currentDate = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
             
             // Go backwards from today, counting consecutive completed days
             while (true) {
-                val dateString = currentDate.format(DateTimeFormatter.ISO_LOCAL_DATE)
+                val dateString = currentDate.toString()
                 val tick = habitTickRepository.getHabitTickByDate(habitId, dateString)
                 
                 if (tick?.done == true) {
                     streak++
-                    currentDate = currentDate.minusDays(1)
+                    currentDate = currentDate.minus(1, DateTimeUnit.DAY)
                 } else {
                     break
                 }
@@ -147,6 +151,6 @@ class CompleteHabitUseCase @Inject constructor(
     }
     
     private fun getTodayDateString(): String {
-        return LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
+        return Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date.toString()
     }
 }

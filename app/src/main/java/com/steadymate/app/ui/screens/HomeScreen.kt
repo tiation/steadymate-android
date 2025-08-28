@@ -54,8 +54,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.steadymate.app.ui.theme.accessibility.accessibleHeading
-import java.time.LocalTime
-import java.time.format.DateTimeFormatter
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 /**
  * Modern home screen for SteadyMate - focused on user engagement and quick actions
@@ -133,7 +134,7 @@ private fun GreetingSection(
     userName: String,
     modifier: Modifier = Modifier
 ) {
-    val currentTime = remember { LocalTime.now() }
+    val currentTime = remember { Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).time }
     val greeting = when (currentTime.hour) {
         in 5..11 -> "Good morning"
         in 12..16 -> "Good afternoon"

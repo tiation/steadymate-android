@@ -22,8 +22,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 /**
  * Comprehensive habits screen with creation, tracking, and statistics
@@ -197,7 +198,7 @@ private fun HabitsHeader(
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                     Text(
-                        text = LocalDate.now().format(DateTimeFormatter.ofPattern("MMM dd, yyyy")),
+                        text = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date.toString(), // Simplified format for now
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                     )

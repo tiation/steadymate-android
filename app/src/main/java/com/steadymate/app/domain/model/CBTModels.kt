@@ -2,8 +2,10 @@ package com.steadymate.app.domain.model
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
+import kotlinx.datetime.Clock
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import java.util.UUID
 
 /**
@@ -15,7 +17,7 @@ data class ReframeEntry(
     @PrimaryKey
     val id: String = UUID.randomUUID().toString(),
     
-    val timestamp: String = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+    val timestamp: String = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).toString(),
     
     // The triggering situation or event
     val situation: String,
@@ -42,7 +44,7 @@ data class ReframeEntry(
     val tags: List<String> = emptyList()
 ) {
     fun getDateTime(): LocalDateTime {
-        return LocalDateTime.parse(timestamp, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+        return LocalDateTime.parse(timestamp)
     }
     
     fun getImprovementScore(): Int {
@@ -58,7 +60,7 @@ data class WorryEntry(
     @PrimaryKey
     val id: String = UUID.randomUUID().toString(),
     
-    val timestamp: String = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+    val timestamp: String = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).toString(),
     
     // The worry or anxious thought
     val worry: String,
@@ -87,12 +89,12 @@ data class WorryEntry(
     val category: WorryCategory = WorryCategory.GENERAL
 ) {
     fun getDateTime(): LocalDateTime {
-        return LocalDateTime.parse(timestamp, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+        return LocalDateTime.parse(timestamp)
     }
     
     fun getScheduledRevisitDateTime(): LocalDateTime? {
         return scheduledRevisit?.let { 
-            LocalDateTime.parse(it, DateTimeFormatter.ISO_LOCAL_DATE_TIME) 
+            LocalDateTime.parse(it) 
         }
     }
 }
@@ -115,7 +117,7 @@ data class MicroWin(
     @PrimaryKey
     val id: String = UUID.randomUUID().toString(),
     
-    val timestamp: String = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+    val timestamp: String = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).toString(),
     
     // The positive event or accomplishment
     val description: String,
@@ -130,7 +132,7 @@ data class MicroWin(
     val reflection: String? = null
 ) {
     fun getDateTime(): LocalDateTime {
-        return LocalDateTime.parse(timestamp, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+        return LocalDateTime.parse(timestamp)
     }
 }
 

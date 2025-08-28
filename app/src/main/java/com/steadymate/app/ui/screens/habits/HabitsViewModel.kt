@@ -12,8 +12,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
+import kotlinx.datetime.Clock
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
+import kotlinx.datetime.toLocalDateTime
 import javax.inject.Inject
 
 /**
@@ -29,7 +33,7 @@ class HabitsViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(HabitsUiState())
     val uiState: StateFlow<HabitsUiState> = _uiState.asStateFlow()
 
-    private val today = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
+    private val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date.toString()
 
     init {
         loadHabits()
@@ -197,22 +201,22 @@ class HabitsViewModel @Inject constructor(
         if (habitTicks.isEmpty()) return 0
 
         var streak = 0
-        var currentDate = LocalDate.now()
+        var currentDate = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
         
         // Check if completed today or yesterday (allow for some flexibility)
         val mostRecentCompletion = habitTicks.first()
-        if (mostRecentCompletion.isBefore(currentDate.minusDays(1))) {
+        if (mostRecentCompletion < currentDate.minus(1, DateTimeUnit.DAY)) {
             return 0 // Streak is broken
         }
 
         // Count consecutive days
         for (tickDate in habitTicks) {
-            if (tickDate == currentDate || tickDate == currentDate.minusDays(1)) {
+            if (tickDate == currentDate || tickDate == currentDate.minus(1, DateTimeUnit.DAY)) {
                 streak++
-                currentDate = tickDate.minusDays(1)
+                currentDate = tickDate.minus(1, DateTimeUnit.DAY)
             } else if (tickDate == currentDate) {
                 streak++
-                currentDate = currentDate.minusDays(1)
+                currentDate = currentDate.minus(1, DateTimeUnit.DAY)
             } else {
                 break
             }

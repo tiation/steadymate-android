@@ -3,7 +3,14 @@ package com.steadymate.app.data.repository
 import com.steadymate.app.domain.model.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
-import java.time.LocalDateTime
+import kotlinx.datetime.Clock
+import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
+import kotlinx.datetime.toLocalDateTime
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -125,7 +132,8 @@ class CBTRepositoryImpl @Inject constructor() : CBTRepository {
     }
 
     override suspend fun getCBTInsights(days: Int): CBTInsights {
-        val cutoffDate = LocalDateTime.now().minusDays(days.toLong())
+        val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+        val cutoffDate = LocalDateTime(now.date.minus(DatePeriod(days = days)), now.time)
         
         val reframes = getFilteredReframes(cutoffDate)
         val worries = getFilteredWorries(cutoffDate)
@@ -150,7 +158,8 @@ class CBTRepositoryImpl @Inject constructor() : CBTRepository {
     }
 
     override suspend fun getReframeStats(days: Int): ReframeStats {
-        val cutoffDate = LocalDateTime.now().minusDays(days.toLong())
+        val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+        val cutoffDate = LocalDateTime(now.date.minus(DatePeriod(days = days)), now.time)
         val reframes = getFilteredReframes(cutoffDate)
         
         val averageImprovement = if (reframes.isNotEmpty()) {
@@ -171,7 +180,8 @@ class CBTRepositoryImpl @Inject constructor() : CBTRepository {
     }
 
     override suspend fun getWorryStats(days: Int): WorryStats {
-        val cutoffDate = LocalDateTime.now().minusDays(days.toLong())
+        val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+        val cutoffDate = LocalDateTime(now.date.minus(DatePeriod(days = days)), now.time)
         val worries = getFilteredWorries(cutoffDate)
         
         val totalWorryTimeMinutes = worries.sumOf { it.worryTimeSeconds } / 60
@@ -199,15 +209,15 @@ class CBTRepositoryImpl @Inject constructor() : CBTRepository {
     }
 
     private fun getFilteredReframes(cutoffDate: LocalDateTime): List<ReframeEntry> {
-        return reframeEntries.filter { it.getDateTime().isAfter(cutoffDate) }
+        return reframeEntries.filter { it.getDateTime() > cutoffDate }
     }
     
     private fun getFilteredWorries(cutoffDate: LocalDateTime): List<WorryEntry> {
-        return worryEntries.filter { it.getDateTime().isAfter(cutoffDate) }
+        return worryEntries.filter { it.getDateTime() > cutoffDate }
     }
     
     private fun getFilteredMicroWins(cutoffDate: LocalDateTime): List<MicroWin> {
-        return microWins.filter { it.getDateTime().isAfter(cutoffDate) }
+        return microWins.filter { it.getDateTime() > cutoffDate }
     }
 
     private fun extractCommonPatterns(reframes: List<ReframeEntry>): List<String> {
@@ -223,17 +233,17 @@ class CBTRepositoryImpl @Inject constructor() : CBTRepository {
         return commonWords
     }
 
-    private fun calculateStreak(activeDays: List<java.time.LocalDate>): Int {
+    private fun calculateStreak(activeDays: List<LocalDate>): Int {
         if (activeDays.isEmpty()) return 0
         
-        val today = java.time.LocalDate.now()
+        val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
         var streak = 0
         var currentDate = today
         
         // Work backwards from today
         while (activeDays.contains(currentDate)) {
             streak++
-            currentDate = currentDate.minusDays(1)
+            currentDate = currentDate.minus(1, DateTimeUnit.DAY)
         }
         
         return streak
