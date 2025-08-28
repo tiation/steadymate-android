@@ -387,6 +387,7 @@ private fun OnboardingPreferencesScreenPreview() {
                         com.steadymate.app.data.proto.OnboardingPrefs.getDefaultInstance()
                     )
                     override suspend fun updateTheme(theme: com.steadymate.app.data.proto.Theme) {}
+                    override suspend fun updateColorPalette(colorPalette: com.steadymate.app.data.proto.Theme.ColorPalette) {}
                     override suspend fun updateConsentSettings(consentSettings: com.steadymate.app.data.proto.ConsentSettings) {}
                     override suspend fun updateNotificationSettings(notificationSettings: com.steadymate.app.data.proto.NotificationSettings) {}
                     override suspend fun updateOnboardingStatus(onboardingStatus: com.steadymate.app.data.proto.OnboardingStatus) {}
@@ -403,6 +404,9 @@ private fun OnboardingPreferencesScreenPreview() {
                     )
                     override fun getNotificationSettings() = kotlinx.coroutines.flow.flowOf(
                         com.steadymate.app.data.proto.NotificationSettings.getDefaultInstance()
+                    )
+                    override fun getColorPalette() = kotlinx.coroutines.flow.flowOf(
+                        com.steadymate.app.data.proto.Theme.ColorPalette.BEAUTIFUL
                     )
                 }
             ),

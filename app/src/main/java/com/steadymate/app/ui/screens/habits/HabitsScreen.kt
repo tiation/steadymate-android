@@ -3,12 +3,10 @@ package com.steadymate.app.ui.screens.habits
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -16,7 +14,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -27,7 +24,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 
 /**
- * Comprehensive habits screen with creation, tracking, and statistics
+ * Enhanced Habits screen with habit stacking encouragement and comprehensive tracking
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -109,15 +106,40 @@ fun HabitsScreen(
                 }
                 
                 else -> {
-                    HabitsList(
-                        habits = uiState.habits,
-                        onToggleCompletion = viewModel::toggleHabitCompletion,
-                        onEditHabit = viewModel::startEditingHabit,
-                        onDeleteHabit = { habitId ->
-                            // Show confirmation before deleting
-                            viewModel.deleteHabit(habitId)
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        // Habit stacking encouragement for users with 1+ habits
+                        if (uiState.habits.size in 1..4) {
+                            item {
+                                HabitStackingEncouragementCard(
+                                    existingHabits = uiState.habits,
+                                    onAddHabitClick = viewModel::showAddHabitDialog
+                                )
+                            }
                         }
-                    )
+                        
+                        // Habit list
+                        items(uiState.habits) { habitCompletion ->
+                            HabitCard(
+                                habitCompletion = habitCompletion,
+                                onToggleCompletion = viewModel::toggleHabitCompletion,
+                                onEditHabit = viewModel::startEditingHabit,
+                                onDeleteHabit = { habitId ->
+                                    viewModel.deleteHabit(habitId)
+                                }
+                            )
+                        }
+                        
+                        // Success celebration for established users
+                        if (uiState.habits.size >= 5) {
+                            item {
+                                HabitMasteryCard(habits = uiState.habits)
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -198,7 +220,7 @@ private fun HabitsHeader(
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                     Text(
-                        text = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date.toString(), // Simplified format for now
+                        text = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date.toString(),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                     )
@@ -241,36 +263,32 @@ private fun EmptyHabitsState(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Icon(
-            imageVector = Icons.Default.CheckCircle,
-            contentDescription = null,
-            modifier = Modifier.size(80.dp),
-            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+        Text(
+            text = "🌱",
+            style = MaterialTheme.typography.displayLarge,
+            modifier = Modifier.padding(bottom = 16.dp)
         )
         
-        Spacer(modifier = Modifier.height(16.dp))
-        
         Text(
-            text = "No Habits Yet",
-            style = MaterialTheme.typography.headlineSmall,
+            text = "Ready to build better habits?",
+            style = MaterialTheme.typography.headlineMedium,
             textAlign = TextAlign.Center,
-            fontWeight = FontWeight.Medium
+            fontWeight = FontWeight.Bold
         )
         
-        Spacer(modifier = Modifier.height(8.dp))
-        
         Text(
-            text = "Start building positive routines by creating your first habit. Small, consistent actions lead to big changes!",
+            text = "Start small, think big. Every great journey begins with a single step.",
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+            modifier = Modifier.padding(vertical = 16.dp)
         )
-        
-        Spacer(modifier = Modifier.height(24.dp))
         
         Button(
             onClick = onAddHabitClick,
-            modifier = Modifier.fillMaxWidth(0.6f)
+            modifier = Modifier
+                .fillMaxWidth(0.8f)
+                .padding(top = 16.dp)
         ) {
             Icon(
                 imageVector = Icons.Default.Add,
@@ -278,30 +296,91 @@ private fun EmptyHabitsState(
                 modifier = Modifier.size(18.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Create First Habit")
+            Text("Add My First Habit")
+        }
+    }
+}
+
+// This card is now removed to simplify the interface
+
+@Composable
+private fun HabitStackingEncouragementCard(
+    existingHabits: List<HabitCompletion>,
+    onAddHabitClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text(
+                text = "✨ You're doing great!",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+            
+            Text(
+                text = "Want to add another habit? The best time is right after something you already do.",
+                style = MaterialTheme.typography.bodyMedium
+            )
+            
+            OutlinedButton(
+                onClick = onAddHabitClick,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Add Another Habit")
+            }
         }
     }
 }
 
 @Composable
-private fun HabitsList(
-    habits: List<HabitCompletion>,
-    onToggleCompletion: (String) -> Unit,
-    onEditHabit: (com.steadymate.app.domain.model.Habit) -> Unit,
-    onDeleteHabit: (String) -> Unit
+private fun HabitMasteryCard(
+    habits: List<HabitCompletion>
 ) {
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+    val totalCompleted = habits.count { it.isCompletedToday }
+    val bestStreak = habits.maxOfOrNull { it.currentStreak } ?: 0
+    
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.tertiaryContainer
+        )
     ) {
-        items(habits) { habitCompletion ->
-            HabitCard(
-                habitCompletion = habitCompletion,
-                onToggleCompletion = onToggleCompletion,
-                onEditHabit = onEditHabit,
-                onDeleteHabit = onDeleteHabit
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text(
+                text = "🎉 Amazing progress!",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
             )
+            
+            Text(
+                text = "You've built ${habits.size} habits. Keep up the great work!",
+                style = MaterialTheme.typography.bodyMedium
+            )
+            
+            if (bestStreak > 0) {
+                Text(
+                    text = "🔥 Best streak: $bestStreak days",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Medium
+                )
+            }
         }
     }
 }
@@ -317,8 +396,7 @@ private fun HabitCard(
     var showMenu by remember { mutableStateOf(false) }
     
     Card(
-        modifier = Modifier
-            .fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
         onClick = { onToggleCompletion(habitCompletion.habit.id) },
         colors = CardDefaults.cardColors(
             containerColor = if (habitCompletion.isCompletedToday) {
@@ -464,7 +542,13 @@ private fun AddHabitDialog(
     
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Create New Habit") },
+        title = { 
+            Text(
+                text = "Add New Habit 🌱",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
+            )
+        },
         text = {
             Column(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -472,29 +556,36 @@ private fun AddHabitDialog(
                 OutlinedTextField(
                     value = title,
                     onValueChange = { title = it },
-                    label = { Text("Habit Name") },
-                    placeholder = { Text("e.g., Drink 8 glasses of water") },
+                    label = { Text("What's your new habit?") },
+                    placeholder = { Text("e.g., Drink a glass of water") },
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
+                    singleLine = true,
+                    supportingText = {
+                        Text(
+                            text = "Keep it simple and specific",
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
                 )
                 
                 Row(
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     Checkbox(
                         checked = hasReminder,
                         onCheckedChange = { hasReminder = it }
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Set daily reminder")
+                    Text("Remind me daily")
                 }
                 
                 if (hasReminder) {
                     OutlinedTextField(
                         value = reminderTime,
                         onValueChange = { reminderTime = it },
-                        label = { Text("Reminder Time") },
-                        placeholder = { Text("e.g., 09:00") },
+                        label = { Text("When?") },
+                        placeholder = { Text("e.g., 9:00 AM") },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
@@ -502,7 +593,7 @@ private fun AddHabitDialog(
             }
         },
         confirmButton = {
-            TextButton(
+            Button(
                 onClick = {
                     onCreateHabit(
                         title,
@@ -511,7 +602,7 @@ private fun AddHabitDialog(
                 },
                 enabled = title.isNotBlank()
             ) {
-                Text("Create")
+                Text("Add Habit")
             }
         },
         dismissButton = {

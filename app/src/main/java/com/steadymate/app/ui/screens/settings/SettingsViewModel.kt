@@ -58,8 +58,9 @@ class SettingsViewModel @Inject constructor(
                 combine(
                     onboardingPreferencesRepository.getThemeSettings(),
                     onboardingPreferencesRepository.getNotificationSettings(),
-                    onboardingPreferencesRepository.getConsentSettings()
-                ) { theme, notifications, consent ->
+                    onboardingPreferencesRepository.getConsentSettings(),
+                    onboardingPreferencesRepository.getColorPalette()
+                ) { theme, notifications, consent, colorPalette ->
                     SettingsUiState(
                         isLoading = false,
                         userPreferences = UserPreferences(
@@ -71,6 +72,7 @@ class SettingsViewModel @Inject constructor(
                             analyticsEnabled = consent.analyticsConsent
                         ),
                         accessibilityPreferences = _uiState.value.accessibilityPreferences,
+                        currentColorPalette = colorPalette,
                         appVersion = getAppVersion(),
                         buildNumber = getBuildNumber()
                     )
@@ -123,6 +125,16 @@ class SettingsViewModel @Inject constructor(
                 onboardingPreferencesRepository.updateTheme(updatedTheme)
             } catch (e: Exception) {
                 showError("Failed to update theme settings: ${e.message}")
+            }
+        }
+    }
+    
+    fun updateColorPalette(colorPalette: com.steadymate.app.data.proto.Theme.ColorPalette) {
+        viewModelScope.launch {
+            try {
+                onboardingPreferencesRepository.updateColorPalette(colorPalette)
+            } catch (e: Exception) {
+                showError("Failed to update color palette: ${e.message}")
             }
         }
     }
@@ -296,6 +308,7 @@ data class SettingsUiState(
     val isLoading: Boolean = false,
     val userPreferences: UserPreferences = UserPreferences(),
     val accessibilityPreferences: AccessibilityPreferences = AccessibilityPreferences(),
+    val currentColorPalette: com.steadymate.app.data.proto.Theme.ColorPalette = com.steadymate.app.data.proto.Theme.ColorPalette.BEAUTIFUL,
     val errorMessage: String? = null,
     val successMessage: String? = null,
     val appVersion: String = "1.0.0",

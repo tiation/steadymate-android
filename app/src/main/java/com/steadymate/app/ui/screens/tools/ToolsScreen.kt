@@ -154,7 +154,7 @@ private fun ToolsContent(
                 )
                 
                 Text(
-                    text = "Breathing exercises and mindfulness tools",
+                    text = "Professional CBT techniques & breathing exercises",
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                     textAlign = TextAlign.Center,
@@ -163,9 +163,9 @@ private fun ToolsContent(
             }
         }
         
-        // CBT Tools Section
+        // Featured CBT Tools Section - More Prominent
         item {
-            CBTToolsSection(onNavigateToCBT = onNavigateToCBT)
+            FeaturedCBTToolsSection(onNavigateToCBT = onNavigateToCBT)
         }
         
         // Quick Access Tools
@@ -565,6 +565,189 @@ private fun DrawScope.drawBreathingCircle(color: Color) {
         radius = radius,
         center = center
     )
+}
+
+@Composable
+private fun FeaturedCBTToolsSection(
+    onNavigateToCBT: (String) -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.8f)
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 6.dp
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(24.dp)
+        ) {
+            // Header with icon
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Info,
+                    contentDescription = null,
+                    modifier = Modifier.size(28.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+                
+                Spacer(modifier = Modifier.width(12.dp))
+                
+                Column {
+                    Text(
+                        text = "CBT Therapy Tools",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                    
+                    Text(
+                        text = "Evidence-based cognitive behavioral therapy techniques",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                    )
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(20.dp))
+            
+            // Featured CBT Tool Cards - Larger and more prominent
+            LazyColumn(
+                modifier = Modifier.height(360.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                item {
+                    FeaturedCBTToolCard(
+                        title = "Thought Reframing",
+                        description = "Challenge and restructure negative thought patterns using evidence-based CBT techniques. Perfect for anxiety and depression management.",
+                        icon = Icons.Default.Info,
+                        color = MaterialTheme.colorScheme.primary,
+                        onClick = { onNavigateToCBT("reframe") },
+                        benefits = listOf("Reduces anxiety", "Evidence-based", "Guided process")
+                    )
+                }
+                
+                item {
+                    FeaturedCBTToolCard(
+                        title = "Worry Timer",
+                        description = "Schedule dedicated worry time to prevent rumination throughout the day. Learn to park anxious thoughts effectively.",
+                        icon = Icons.Default.Settings,
+                        color = MaterialTheme.colorScheme.secondary,
+                        onClick = { onNavigateToCBT("worry_timer") },
+                        benefits = listOf("Controls rumination", "Structured approach", "Action planning")
+                    )
+                }
+                
+                item {
+                    FeaturedCBTToolCard(
+                        title = "Micro Wins & Gratitude",
+                        description = "Practice the 'Three Good Things' exercise daily to build positive thinking patterns and celebrate achievements.",
+                        icon = Icons.Default.Star,
+                        color = MaterialTheme.colorScheme.tertiary,
+                        onClick = { onNavigateToCBT("micro_wins") },
+                        benefits = listOf("Builds resilience", "Daily practice", "Positive focus")
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun FeaturedCBTToolCard(
+    title: String,
+    description: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    color: Color,
+    onClick: () -> Unit,
+    benefits: List<String>
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
+        colors = CardDefaults.cardColors(
+            containerColor = color.copy(alpha = 0.12f)
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 3.dp
+        )
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Icon section
+            Surface(
+                modifier = Modifier.size(56.dp),
+                shape = RoundedCornerShape(12.dp),
+                color = color.copy(alpha = 0.2f)
+            ) {
+                Box(
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = title,
+                        modifier = Modifier.size(28.dp),
+                        tint = color
+                    )
+                }
+            }
+            
+            Spacer(modifier = Modifier.width(16.dp))
+            
+            // Content section
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                    modifier = Modifier.padding(top = 4.dp, bottom = 8.dp)
+                )
+                
+                // Benefits chips
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    items(benefits) { benefit ->
+                        Surface(
+                            color = color.copy(alpha = 0.15f),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text(
+                                text = benefit,
+                                style = MaterialTheme.typography.labelSmall,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                color = color,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
+                }
+            }
+            
+            // Arrow indicator
+            Icon(
+                imageVector = Icons.Default.ArrowForward,
+                contentDescription = null,
+                modifier = Modifier.size(24.dp),
+                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+            )
+        }
+    }
 }
 
 @Composable

@@ -76,7 +76,8 @@ class OnboardingViewModel @Inject constructor(
         themeMode: Theme.ThemeMode,
         useDynamicColors: Boolean = false,
         highContrastEnabled: Boolean = false,
-        accentColor: String = ""
+        accentColor: String = "",
+        colorPalette: Theme.ColorPalette = Theme.ColorPalette.BEAUTIFUL
     ) {
         viewModelScope.launch {
             val theme = Theme.newBuilder()
@@ -84,8 +85,15 @@ class OnboardingViewModel @Inject constructor(
                 .setUseDynamicColors(useDynamicColors)
                 .setHighContrastEnabled(highContrastEnabled)
                 .setAccentColor(accentColor)
+                .setColorPalette(colorPalette)
                 .build()
             onboardingRepository.updateTheme(theme)
+        }
+    }
+    
+    fun updateColorPalette(colorPalette: Theme.ColorPalette) {
+        viewModelScope.launch {
+            onboardingRepository.updateColorPalette(colorPalette)
         }
     }
 

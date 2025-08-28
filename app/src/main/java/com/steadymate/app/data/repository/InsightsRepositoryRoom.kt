@@ -95,7 +95,8 @@ class InsightsRepositoryRoom @Inject constructor(
         val endTime = weekEnd.toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds()
         
         val stats = moodEntryDao.getMoodStatisticsForPeriod(userId, startTime, endTime)
-        val topEmotions = getEmotionAnalysisUseCase.getTopEmotions(userId, TimeRange.WEEK, 3)
+        val emotionAnalysis = getEmotionAnalysisUseCase.execute(userId, TimeRange.WEEK)
+        val topEmotions = emotionAnalysis.take(3).map { it.emotion }
         
         return WeeklySummary(
             weekStart = weekStart,

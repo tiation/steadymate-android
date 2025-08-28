@@ -156,34 +156,10 @@ private fun InsightsContent(
             }
         }
         
-        // Mood trend chart
+        // Mood summary (simplified, no complex charts)
         item {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp)
-                ) {
-                    Text(
-                        text = "Mood Trend",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    
-                    Spacer(modifier = Modifier.height(8.dp))
-                    
-                    AnimatedVisibility(
-                        visible = chartData.isNotEmpty(),
-                        enter = fadeIn(),
-                        exit = fadeOut()
-                    ) {
-                        MoodLineChart(
-                            chartData = chartData,
-                            timeRange = uiState.selectedTimeRange
-                        )
-                    }
-                }
+            if (chartData.isNotEmpty()) {
+                SimpleMoodSummary(chartData = chartData)
             }
         }
         
@@ -194,27 +170,10 @@ private fun InsightsContent(
             }
         }
         
-        // Emotion analysis
+        // Emotion summary (simplified)
         item {
             if (uiState.emotionAnalysis.isNotEmpty()) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp)
-                    ) {
-                        Text(
-                            text = "Emotion Analysis",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        
-                        Spacer(modifier = Modifier.height(8.dp))
-                        
-                        EmotionBarChart(emotions = uiState.emotionAnalysis)
-                    }
-                }
+                SimpleEmotionSummary(emotions = uiState.emotionAnalysis)
             }
         }
         
@@ -224,6 +183,183 @@ private fun InsightsContent(
                 ActivityCorrelationsSection(activities = uiState.activityCorrelations.take(5))
             }
         }
+    }
+}
+
+@Composable
+private fun SimpleMoodSummary(
+    chartData: List<ChartDataPoint>,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text(
+                text = "📈 Mood Summary",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.SemiBold
+            )
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            if (chartData.isNotEmpty()) {
+                val avgMood = chartData.map { it.y }.average()
+                val highestMood = chartData.maxOfOrNull { it.y } ?: 0f
+                val lowestMood = chartData.minOfOrNull { it.y } ?: 0f
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    MoodStat(
+                        label = "Average",
+                        value = String.format("%.1f", avgMood),
+                        emoji = "😊",
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    
+                    MoodStat(
+                        label = "Best",
+                        value = String.format("%.1f", highestMood),
+                        emoji = "🌟",
+                        color = MaterialTheme.colorScheme.tertiary
+                    )
+                    
+                    MoodStat(
+                        label = "Lowest",
+                        value = String.format("%.1f", lowestMood),
+                        emoji = "📊",
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                }
+                
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                Text(
+                    text = "Based on ${chartData.size} entries",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            } else {
+                Text(
+                    text = "No mood data available for this period",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun MoodStat(
+    label: String,
+    value: String,
+    emoji: String,
+    color: Color,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = emoji,
+            style = MaterialTheme.typography.headlineSmall
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            color = color
+        )
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
+private fun SimpleEmotionSummary(
+    emotions: List<EmotionAnalysis>,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text(
+                text = "🎭 Top Emotions",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.SemiBold
+            )
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            if (emotions.isNotEmpty()) {
+                emotions.take(3).forEach { emotion ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "${getEmotionEmoji(emotion.emotion)} ${emotion.emotion}",
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Medium
+                        )
+                        
+                        Text(
+                            text = "${emotion.percentage.roundToInt()}%",
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    
+                    if (emotion != emotions.take(3).last()) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+                }
+            } else {
+                Text(
+                    text = "No emotion data available",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+    }
+}
+
+private fun getEmotionEmoji(emotion: String): String {
+    return when (emotion.lowercase()) {
+        "happy", "joy", "excited" -> "😊"
+        "sad", "sadness" -> "😢"
+        "angry", "anger" -> "😠"
+        "anxious", "anxiety" -> "😰"
+        "calm", "peaceful" -> "😌"
+        "stressed" -> "😫"
+        "grateful" -> "🙏"
+        "proud" -> "😤"
+        "content" -> "😇"
+        "tired" -> "😴"
+        else -> "😐"
     }
 }
 

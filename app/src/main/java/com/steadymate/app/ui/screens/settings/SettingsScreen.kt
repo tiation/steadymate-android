@@ -18,6 +18,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.steadymate.app.ui.theme.accessibility.AccessibilityPreferences
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.ui.graphics.Color
 
 @Composable
 fun SettingsScreen(
@@ -86,6 +88,7 @@ fun SettingsScreen(
                     uiState = uiState,
                     onUpdateNotifications = viewModel::updateNotificationEnabled,
                     onUpdateDarkTheme = viewModel::updateDarkTheme,
+                    onUpdateColorPalette = viewModel::updateColorPalette,
                     onUpdateHighContrast = viewModel::updateHighContrast,
                     onUpdateLargeFont = viewModel::updateLargeFont,
                     onUpdateReducedMotion = viewModel::updateReducedMotion,
@@ -131,6 +134,7 @@ private fun SettingsContent(
     uiState: SettingsUiState,
     onUpdateNotifications: (Boolean) -> Unit,
     onUpdateDarkTheme: (Boolean) -> Unit,
+    onUpdateColorPalette: (com.steadymate.app.data.proto.Theme.ColorPalette) -> Unit,
     onUpdateHighContrast: (Boolean) -> Unit,
     onUpdateLargeFont: (Boolean) -> Unit,
     onUpdateReducedMotion: (Boolean) -> Unit,
@@ -197,6 +201,22 @@ private fun SettingsContent(
                     checked = uiState.accessibilityPreferences.isHighContrast,
                     onCheckedChange = onUpdateHighContrast,
                     icon = Icons.Default.Settings
+                )
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Text(
+                    text = "Color Palette",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                ColorPaletteSelector(
+                    selectedPalette = uiState.currentColorPalette,
+                    onPaletteSelected = onUpdateColorPalette
                 )
             }
         }
@@ -464,6 +484,108 @@ private fun SettingsActionItem(
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(20.dp)
         )
+    }
+}
+
+@Composable
+private fun ColorPaletteSelector(
+    selectedPalette: com.steadymate.app.data.proto.Theme.ColorPalette,
+    onPaletteSelected: (com.steadymate.app.data.proto.Theme.ColorPalette) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier.fillMaxWidth()
+    ) {
+        PaletteOption(
+            title = "Beautiful",
+            description = "Soft purples and pinks (default)",
+            isSelected = selectedPalette == com.steadymate.app.data.proto.Theme.ColorPalette.BEAUTIFUL,
+            onSelect = { onPaletteSelected(com.steadymate.app.data.proto.Theme.ColorPalette.BEAUTIFUL) },
+            previewColor = Color(0xFF9C27B0) // Purple
+        )
+        
+        PaletteOption(
+            title = "Masculine",
+            description = "Bold electric blues",
+            isSelected = selectedPalette == com.steadymate.app.data.proto.Theme.ColorPalette.MASCULINE,
+            onSelect = { onPaletteSelected(com.steadymate.app.data.proto.Theme.ColorPalette.MASCULINE) },
+            previewColor = Color(0xFF2196F3) // Blue
+        )
+        
+        PaletteOption(
+            title = "Classic",
+            description = "Traditional Material 3 purple",
+            isSelected = selectedPalette == com.steadymate.app.data.proto.Theme.ColorPalette.CLASSIC,
+            onSelect = { onPaletteSelected(com.steadymate.app.data.proto.Theme.ColorPalette.CLASSIC) },
+            previewColor = Color(0xFF673AB7) // Deep Purple
+        )
+        
+        PaletteOption(
+            title = "High Contrast",
+            description = "Ultra high contrast for accessibility",
+            isSelected = selectedPalette == com.steadymate.app.data.proto.Theme.ColorPalette.HIGH_CONTRAST,
+            onSelect = { onPaletteSelected(com.steadymate.app.data.proto.Theme.ColorPalette.HIGH_CONTRAST) },
+            previewColor = Color(0xFF000000) // Black
+        )
+    }
+}
+
+@Composable
+private fun PaletteOption(
+    title: String,
+    description: String,
+    isSelected: Boolean,
+    onSelect: () -> Unit,
+    previewColor: Color,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .selectable(
+                selected = isSelected,
+                onClick = onSelect
+            )
+            .padding(vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        RadioButton(
+            selected = isSelected,
+            onClick = onSelect
+        )
+        
+        Spacer(modifier = Modifier.width(16.dp))
+        
+        // Color preview circle
+        Card(
+            modifier = Modifier.size(24.dp),
+            shape = RoundedCornerShape(50),
+            colors = CardDefaults.cardColors(
+                containerColor = previewColor
+            ),
+            elevation = CardDefaults.cardElevation(
+                defaultElevation = 2.dp
+            )
+        ) {}
+        
+        Spacer(modifier = Modifier.width(16.dp))
+        
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
     }
 }
 

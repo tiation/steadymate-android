@@ -76,4 +76,14 @@ interface OnboardingPreferencesRepository {
      * Get notification settings
      */
     fun getNotificationSettings(): Flow<NotificationSettings>
+    
+    /**
+     * Update color palette setting
+     */
+    suspend fun updateColorPalette(colorPalette: Theme.ColorPalette)
+    
+    /**
+     * Get current color palette setting
+     */
+    fun getColorPalette(): Flow<Theme.ColorPalette>
 }

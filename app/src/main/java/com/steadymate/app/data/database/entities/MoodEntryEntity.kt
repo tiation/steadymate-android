@@ -8,7 +8,7 @@ import androidx.room.TypeConverters
 import com.steadymate.app.data.database.converters.LocalDateTimeConverter
 import com.steadymate.app.data.database.converters.StringListConverter
 import com.steadymate.app.domain.model.MoodEntry
-import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.*
 
 /**
  * Room entity representing a mood entry in the database.
@@ -22,7 +22,7 @@ import kotlinx.datetime.LocalDateTime
         Index(value = ["moodLevel"])
     ]
 )
-@TypeConverters(LocalDateTimeConverter::class, StringListConverter::class)
+@TypeConverters(StringListConverter::class)
 data class MoodEntryEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0L,
@@ -30,7 +30,7 @@ data class MoodEntryEntity(
     val moodLevel: Int, // 0..10 scale
     val emotionTags: List<String>, // Simple tags like "Happy", "Sad", "Anxious"
     val notes: String = "", // Optional notes
-    val timestamp: LocalDateTime
+    val timestamp: Long // Epoch milliseconds for database compatibility
 )
 
 /**
@@ -43,7 +43,8 @@ fun MoodEntryEntity.toDomainModel(): MoodEntry {
         moodLevel = moodLevel,
         emotionTags = emotionTags,
         notes = notes,
-        timestamp = timestamp
+        timestamp = Instant.fromEpochMilliseconds(timestamp)
+            .toLocalDateTime(TimeZone.currentSystemDefault())
     )
 }
 
@@ -57,6 +58,7 @@ fun MoodEntry.toEntity(): MoodEntryEntity {
         moodLevel = moodLevel,
         emotionTags = emotionTags,
         notes = notes,
-        timestamp = timestamp
+        timestamp = timestamp.toInstant(TimeZone.currentSystemDefault())
+            .toEpochMilliseconds()
     )
 }

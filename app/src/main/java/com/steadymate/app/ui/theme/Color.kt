@@ -2,7 +2,34 @@ package com.steadymate.app.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Base Material 3 colors
+// 🎨 Beautiful & Fun SteadyMate Brand Colors - Joyful and Inspiring!
+
+// Primary Brand Colors - Vibrant and Confident
+val SteadyPurple = Color(0xFF8B5CF6)      // Vibrant purple - main brand color
+val SteadyPurpleLight = Color(0xFFBF8FFF)  // Light purple for highlights
+val SteadyPurpleDark = Color(0xFF5B21B6)   // Deep purple for depth
+
+// Secondary Fun Colors - Playful and Energetic
+val JoyfulPink = Color(0xFFEC4899)         // Bright pink - fun and friendly
+val JoyfulPinkLight = Color(0xFFF472B6)    // Light pink for accents
+val JoyfulPinkDark = Color(0xBE185D)       // Deep pink for contrast
+
+// Success & Positive Colors - Motivating
+val VibrantGreen = Color(0xFF10B981)       // Fresh green - success and growth
+val VibrantGreenLight = Color(0xFF6EE7B7)  // Light green for celebrations
+val VibrantGreenDark = Color(0xFF047857)   // Deep green for stability
+
+// Warning & Energy Colors - Exciting
+val EnergeticOrange = Color(0xFFF59E0B)    // Warm orange - energy and motivation
+val EnergeticOrangeLight = Color(0xFFFBBF24) // Light orange for highlights
+val EnergeticOrangeDark = Color(0xFFD97706)  // Deep orange for strength
+
+// Info & Trust Colors - Calm yet engaging
+val TrustBlue = Color(0xFF3B82F6)          // Trustworthy blue - reliability
+val TrustBlueLight = Color(0xFF93C5FD)     // Light blue for serenity
+val TrustBlueDark = Color(0xFF1E40AF)      // Deep blue for professionalism
+
+// Base Material 3 colors (kept for compatibility)
 val Purple80 = Color(0xFFD0BCFF)
 val PurpleGrey80 = Color(0xFFCCC2DC)
 val Pink80 = Color(0xFFEFB8C8)
@@ -24,7 +51,92 @@ val SteadyOrange = Color(0xFFFF9800)
 val SteadyOrangeLight = Color(0xFFFFC107)
 val SteadyOrangeDark = Color(0xFFE65100)
 
-// High contrast colors for accessibility
+// 🌈 Beautiful Light Theme Colors - Clean, Fresh & Inspiring
+object BeautifulLightColors {
+    // Pure white base with subtle warm tints
+    val PureWhite = Color(0xFFFFFFFF)          // Crisp white background
+    val WarmWhite = Color(0xFFFFFBFE)          // Slightly warm white
+    val CreamWhite = Color(0xFFFEFDFC)         // Cream tinted white
+    val CloudWhite = Color(0xFFF8FAFC)         // Cool white with blue tint
+    
+    // Light surface variations
+    val LightSurface1 = Color(0xFFF1F5F9)      // Very light gray-blue
+    val LightSurface2 = Color(0xFFE2E8F0)      // Light gray-blue
+    val LightSurface3 = Color(0xFFCBD5E1)      // Medium gray-blue
+    
+    // Text colors for light theme
+    val DarkText = Color(0xFF0F172A)           // Very dark blue-gray
+    val MediumText = Color(0xFF475569)         // Medium blue-gray
+    val LightText = Color(0xFF64748B)          // Light blue-gray
+    val SubtleText = Color(0xFF94A3B8)         // Very light blue-gray
+}
+
+// 🔥 Enhanced High Contrast Colors - Ultra Accessible & Bold!
+object EnhancedHighContrastColors {
+    // ⚡ EXTREME High Contrast Light Theme - Maximum readability
+    val HCPrimary = Color(0xFF000000)           // Pure black - ultimate contrast
+    val HCOnPrimary = Color(0xFFFFFFFF)         // Pure white
+    val HCPrimaryContainer = Color(0xFF000000)  // Pure black containers
+    val HCOnPrimaryContainer = Color(0xFFFFFFFF) // Pure white text
+    
+    val HCSecondary = Color(0xFF0033FF)         // Ultra bright blue
+    val HCOnSecondary = Color(0xFFFFFFFF)       // Pure white
+    val HCSecondaryContainer = Color(0xFFE0F0FF) // Light blue container
+    val HCOnSecondaryContainer = Color(0xFF000000) // Black text
+    
+    val HCTertiary = Color(0xFFCC0000)          // Bold red
+    val HCOnTertiary = Color(0xFFFFFFFF)        // Pure white
+    val HCTertiaryContainer = Color(0xFFFFE0E0) // Light red container
+    val HCOnTertiaryContainer = Color(0xFF000000) // Black text
+    
+    val HCError = Color(0xFFFF0000)             // Pure red error
+    val HCOnError = Color(0xFFFFFFFF)           // Pure white
+    val HCErrorContainer = Color(0xFFFFCCCC)    // Light red container
+    val HCOnErrorContainer = Color(0xFF000000)  // Black text
+    
+    val HCBackground = Color(0xFFFFFFFF)        // Pure white background
+    val HCOnBackground = Color(0xFF000000)      // Pure black text
+    val HCSurface = Color(0xFFFFFFFF)           // Pure white surface
+    val HCOnSurface = Color(0xFF000000)         // Pure black text
+    
+    val HCSurfaceVariant = Color(0xFFF0F0F0)    // Very light gray
+    val HCOnSurfaceVariant = Color(0xFF000000)  // Pure black text
+    val HCOutline = Color(0xFF000000)           // Pure black outlines
+    val HCOutlineVariant = Color(0xFF666666)    // Dark gray outlines
+    
+    // ⚡ EXTREME High Contrast Dark Theme - Maximum visibility
+    val HCDarkPrimary = Color(0xFFFFFFFF)       // Pure white - ultra bright
+    val HCDarkOnPrimary = Color(0xFF000000)     // Pure black
+    val HCDarkPrimaryContainer = Color(0xFFFFFFFF) // Pure white containers
+    val HCDarkOnPrimaryContainer = Color(0xFF000000) // Black text
+    
+    val HCDarkSecondary = Color(0xFF00FFFF)     // Electric cyan
+    val HCDarkOnSecondary = Color(0xFF000000)   // Black text
+    val HCDarkSecondaryContainer = Color(0xFF003333) // Dark cyan container
+    val HCDarkOnSecondaryContainer = Color(0xFFFFFFFF) // White text
+    
+    val HCDarkTertiary = Color(0xFFFF3366)      // Bright pink-red
+    val HCDarkOnTertiary = Color(0xFF000000)    // Black text
+    val HCDarkTertiaryContainer = Color(0xFF330011) // Dark red container
+    val HCDarkOnTertiaryContainer = Color(0xFFFFFFFF) // White text
+    
+    val HCDarkError = Color(0xFFFF0066)         // Bright error red
+    val HCDarkOnError = Color(0xFF000000)       // Black text
+    val HCDarkErrorContainer = Color(0xFF330000) // Dark error container
+    val HCDarkOnErrorContainer = Color(0xFFFFFFFF) // White text
+    
+    val HCDarkBackground = Color(0xFF000000)    // Pure black background
+    val HCDarkOnBackground = Color(0xFFFFFFFF)  // Pure white text
+    val HCDarkSurface = Color(0xFF000000)       // Pure black surface
+    val HCDarkOnSurface = Color(0xFFFFFFFF)     // Pure white text
+    
+    val HCDarkSurfaceVariant = Color(0xFF111111) // Very dark gray
+    val HCDarkOnSurfaceVariant = Color(0xFFFFFFFF) // Pure white text
+    val HCDarkOutline = Color(0xFFFFFFFF)       // Pure white outlines
+    val HCDarkOutlineVariant = Color(0xFFCCCCCC) // Light gray outlines
+}
+
+// Legacy high contrast (keeping for compatibility)
 object HighContrastColors {
     // High contrast light theme
     val HCPrimary = Color(0xFF000000)           // Pure black

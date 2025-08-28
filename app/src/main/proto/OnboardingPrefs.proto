@@ -27,10 +27,18 @@ message Theme {
     THEME_MODE_UNSPECIFIED = 3;
   }
   
+  enum ColorPalette {
+    BEAUTIFUL = 0;      // Default beautiful purple/pink palette
+    MASCULINE = 1;      // Bold industrial electric blue palette
+    CLASSIC = 2;        // Traditional Material 3 purple palette
+    HIGH_CONTRAST = 3;  // Ultra high contrast accessibility palette
+  }
+  
   ThemeMode mode = 1;
   bool use_dynamic_colors = 2;
   bool high_contrast_enabled = 3;
   string accent_color = 4; // Hex color code
+  ColorPalette color_palette = 5; // Selected color palette
 }
 
 // Consent and privacy settings

@@ -55,15 +55,13 @@ abstract class RepositoryModule {
         habitTickRepositoryImpl: HabitTickRepositoryImpl
     ): HabitTickRepository
 
+    @Binds
+    @Singleton
+    abstract fun bindInsightsRepository(
+        insightsRepositoryRoom: InsightsRepositoryRoom
+    ): InsightsRepository
+    
     companion object {
-        @Provides
-        @Singleton
-        fun provideInsightsRepository(
-            insightsRepositoryImpl: InsightsRepositoryImpl
-        ): InsightsRepository {
-            // Use mock data for now to avoid compilation issues
-            return insightsRepositoryImpl
-        }
         
         @Provides
         @Singleton

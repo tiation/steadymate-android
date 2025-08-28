@@ -136,4 +136,22 @@ class OnboardingPreferencesRepositoryImpl @Inject constructor(
         onboardingPrefsDataStore.data.map { prefs ->
             prefs.notificationSettings
         }
+    
+    override suspend fun updateColorPalette(colorPalette: Theme.ColorPalette) {
+        onboardingPrefsDataStore.updateData { currentPrefs ->
+            val currentTheme = currentPrefs.theme
+            val updatedTheme = currentTheme.toBuilder()
+                .setColorPalette(colorPalette)
+                .build()
+            
+            currentPrefs.toBuilder()
+                .setTheme(updatedTheme)
+                .build()
+        }
+    }
+    
+    override fun getColorPalette(): Flow<Theme.ColorPalette> = 
+        onboardingPrefsDataStore.data.map { prefs ->
+            prefs.theme.colorPalette
+        }
 }

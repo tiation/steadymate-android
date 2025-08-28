@@ -11,8 +11,7 @@ import kotlin.math.abs
  * Use case for calculating comprehensive mood statistics
  */
 class GetMoodStatisticsUseCase @Inject constructor(
-    private val moodEntryDao: MoodEntryDao,
-    private val emotionAnalysisUseCase: GetEmotionAnalysisUseCase
+    private val moodEntryDao: MoodEntryDao
 ) {
     
     suspend fun execute(userId: String, timeRange: TimeRange): MoodStatistics? {
@@ -27,7 +26,7 @@ class GetMoodStatisticsUseCase @Inject constructor(
         val improvementPercentage = calculateMoodImprovement(userId, timeRange)
         val consistencyScore = calculateConsistencyScore(userId, timeRange)
         val moodTrend = calculateMoodTrend(userId, timeRange)
-        val topEmotions = emotionAnalysisUseCase.getTopEmotions(userId, timeRange, 3)
+        val topEmotions = getTopEmotions(userId, timeRange, 3)
         
         return MoodStatistics(
             totalEntries = stats.totalEntries,
@@ -47,7 +46,9 @@ class GetMoodStatisticsUseCase @Inject constructor(
     private suspend fun calculateCurrentStreak(userId: String): Int {
         val recent = moodEntryDao.getMostRecentEntry(userId) ?: return 0
         val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
-        val recentDate = recent.timestamp.date
+        val recentDateTime = kotlinx.datetime.Instant.fromEpochMilliseconds(recent.timestamp)
+            .toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault())
+        val recentDate = recentDateTime.date
         
         // If last entry is not today or yesterday, streak is broken
         if (recentDate != today && recentDate != today.minus(1, DateTimeUnit.DAY)) {
@@ -149,6 +150,12 @@ class GetMoodStatisticsUseCase @Inject constructor(
             TimeRange.SIX_MONTHS -> "6 months" 
             TimeRange.YEAR -> "year"
         }
+    }
+    
+    private suspend fun getTopEmotions(userId: String, timeRange: TimeRange, limit: Int): List<String> {
+        val (startTime, endTime) = getTimeRangeMillis(timeRange)
+        val emotionFrequencies = moodEntryDao.getEmotionFrequencies(userId, startTime, endTime)
+        return emotionFrequencies.take(limit).map { it.emotion }
     }
     
     private fun getTimeRangeMillis(timeRange: TimeRange): Pair<Long, Long> {
