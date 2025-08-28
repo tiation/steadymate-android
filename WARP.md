@@ -71,9 +71,17 @@ build_debug:
   name: "🔨 Build Debug APK"
   command: "./gradlew assembleDebug"
   
+build_release:
+  name: "📦 Build Release APK"
+  command: "./gradlew assembleRelease"
+  
 run_tests:
   name: "🧪 Run All Tests"  
   command: "./gradlew test"
+  
+run_ui_tests:
+  name: "📱 Run UI Tests"
+  command: "./gradlew connectedDebugAndroidTest"
   
 lint_check:
   name: "🔍 Lint Check"
@@ -82,6 +90,18 @@ lint_check:
 clean_build:
   name: "🧹 Clean Build"
   command: "./gradlew clean build"
+  
+generate_proto:
+  name: "⚙️ Generate Proto Classes"
+  command: "./gradlew generateProto"
+  
+install_debug:
+  name: "📲 Install Debug APK"
+  command: "./gradlew installDebug"
+  
+check_dependencies:
+  name: "📊 Check Dependencies"
+  command: "./gradlew dependencies"
 ```
 
 ## 2. Multi-Module Clean Architecture
@@ -152,8 +172,11 @@ Allowed dependencies:
 ### Debugging
 
 ```bash
-# View logcat in terminal
+# View logcat in terminal with app-specific filter
 adb logcat | grep "SteadyMate"
+
+# View logcat with priority filter
+adb logcat *:W | grep "SteadyMate"
 
 # Install debug APK
 ./gradlew installDebug
@@ -288,35 +311,45 @@ When updating the proto schema:
 - **Compile SDK**: 34
 - **Target SDK**: 34  
 - **Min SDK**: 24 (Android 7.0+)
+- **Java**: Version 11
+- **BuildSrc**: Centralized dependency management
+- **Version Code**: 5 (v4.1.0)
 
 ### Key Plugin Versions
-- **Hilt**: Managed via Compose BOM
-- **Protobuf**: Auto-configured
-- **Kotlin Serialization**: Auto-configured
+- **Hilt**: 2.48
+- **Protobuf**: 3.24.4 (Plugin: 0.9.4)
+- **Kotlin Serialization**: 1.6.2
+- **Compose BOM**: 2024.02.00
+- **Navigation**: 2.7.6
+- **Room**: 2.6.1
+- **WorkManager**: 2.9.0
+- **Vico Charts**: 1.13.1
 
 ### Dependency Management
 
-Dependencies are managed in `app/build.gradle.kts` using hardcoded versions. Key patterns:
+Dependencies are managed through `buildSrc/src/main/kotlin/Dependencies.kt` for centralized version control. Key patterns:
 
 ```kotlin
 // Compose BOM manages all Compose versions
-val composeBom = platform("androidx.compose:compose-bom:2024.02.00")
+val composeBom = platform(Dependencies.Compose.bom)
+implementation(composeBom)
 
 // Core dependencies
-implementation("androidx.core:core-ktx:1.12.0")
-implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
+implementation(Dependencies.AndroidX.coreKtx)
+implementation(Dependencies.AndroidX.lifecycleViewmodelCompose)
 
 // Hilt DI
-implementation("com.google.dagger:hilt-android:2.48")
-kapt("com.google.dagger:hilt-compiler:2.48")
+implementation(Dependencies.Hilt.android)
+kapt(Dependencies.Hilt.compiler)
 ```
 
 ### Adding New Dependencies
 
-1. Add to appropriate build.gradle.kts (app, core module, or feature module)
-2. Follow version patterns established in existing dependencies
-3. Add to appropriate module based on dependency rules
+1. Update version in `buildSrc/src/main/kotlin/Dependencies.kt`
+2. Add dependency reference in appropriate build.gradle.kts (app, core module, or feature module)
+3. Follow module dependency rules (see Architecture section)
 4. Sync and verify build
+5. Run `./gradlew build` to ensure compatibility
 
 ## 8. Testing Strategy
 
@@ -382,7 +415,10 @@ private val testDataStore = DataStoreFactory.create(
 ./gradlew connectedAndroidTest   # All instrumented tests  
 ./gradlew testDebugUnitTest      # Debug unit tests only
 ./gradlew :app:test              # App module tests only
+./gradlew :core:domain:test      # Domain layer tests only
+./gradlew :feature:home:test     # Feature module tests only
 ./gradlew --continue test        # Continue on test failures
+./gradlew testDebugUnitTest --tests="*ViewModelTest"
 ```
 
 ## 9. Dev Environment Setup

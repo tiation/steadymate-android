@@ -1,10 +1,13 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.plugin.compose")
     id("com.google.dagger.hilt.android")
     id("com.google.protobuf")
     kotlin("kapt")
     kotlin("plugin.serialization")
+    id("com.google.gms.google-services")
+    id("com.google.firebase.crashlytics")
 }
 
 android {
@@ -47,10 +50,6 @@ android {
         compose = true
     }
     
-    composeOptions {
-        kotlinCompilerExtensionVersion = Dependencies.kotlinCompilerExtension
-    }
-    
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
@@ -75,6 +74,7 @@ protobuf {
 }
 
 dependencies {
+    implementation("com.google.firebase:firebase-crashlytics:20.0.0")
     // Compose BOM - manages all Compose library versions
     val composeBom = platform(Dependencies.Compose.bom)
     implementation(composeBom)

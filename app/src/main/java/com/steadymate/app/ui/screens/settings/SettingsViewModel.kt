@@ -64,7 +64,8 @@ class SettingsViewModel @Inject constructor(
                         isLoading = false,
                         userPreferences = UserPreferences(
                             notificationsEnabled = notifications.pushNotificationsEnabled,
-                            darkThemeEnabled = theme.mode == com.steadymate.app.data.proto.Theme.ThemeMode.DARK,
+                            darkThemeEnabled = theme.mode == com.steadymate.app.data.proto.Theme.ThemeMode.DARK || 
+                                             theme.mode == com.steadymate.app.data.proto.Theme.ThemeMode.THEME_MODE_UNSPECIFIED,
                             crisisHotlineEnabled = true, // Default to true for safety
                             dataBackupEnabled = true, // Default preference
                             analyticsEnabled = consent.analyticsConsent

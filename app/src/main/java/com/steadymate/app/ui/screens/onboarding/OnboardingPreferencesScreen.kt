@@ -50,7 +50,7 @@ fun OnboardingPreferencesScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var selectedTheme by remember { mutableStateOf(Theme.ThemeMode.SYSTEM) }
+    var selectedTheme by remember { mutableStateOf(Theme.ThemeMode.DARK) }
     var useDynamicColors by remember { mutableStateOf(false) }
     var highContrastEnabled by remember { mutableStateOf(false) }
     var notificationsEnabled by remember { mutableStateOf(true) }
@@ -266,7 +266,25 @@ fun OnboardingPreferencesScreen(
                 Spacer(modifier = Modifier.height(12.dp))
                 
                 OutlinedButton(
-                    onClick = onNext,
+                    onClick = {
+                        // Set dark theme as default when using defaults
+                        viewModel.updateThemeSettings(
+                            themeMode = Theme.ThemeMode.DARK,
+                            useDynamicColors = false,
+                            highContrastEnabled = false
+                        )
+                        
+                        // Set default notification settings
+                        viewModel.updateNotificationSettings(
+                            pushNotifications = true,
+                            emailNotifications = false,
+                            workoutReminders = true,
+                            progressUpdates = true,
+                            achievementAlerts = true
+                        )
+                        
+                        onNext()
+                    },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text("Use defaults")

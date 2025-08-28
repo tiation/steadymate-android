@@ -21,10 +21,10 @@ message OnboardingPrefs {
 // Theme configuration
 message Theme {
   enum ThemeMode {
-    THEME_MODE_UNSPECIFIED = 0;
+    DARK = 0;  // Default theme is now dark
     LIGHT = 1;
-    DARK = 2;
-    SYSTEM = 3;
+    SYSTEM = 2;
+    THEME_MODE_UNSPECIFIED = 3;
   }
   
   ThemeMode mode = 1;

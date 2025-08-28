@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "745467015076",
+    "project_id": "steadymate-54f24",
+    "storage_bucket": "steadymate-54f24.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:745467015076:android:fd3b90ea393c1111e99b31",
+        "android_client_info": {
+          "package_name": "com.steadymate.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDd4hHVI-Dtn0xcRYJJbI6k-HgXAW8i24E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

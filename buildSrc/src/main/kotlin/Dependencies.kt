@@ -5,9 +5,9 @@ object Dependencies {
     const val targetSdk = 34
     
     // Kotlin & Android Versions
-    const val kotlinVersion = "1.9.22"
-    const val kotlinCompilerExtension = "1.5.8"
-    const val agpVersion = "8.2.2"
+    const val kotlinVersion = "2.0.21"
+    const val kotlinCompilerExtension = "1.5.15"
+    const val agpVersion = "8.8.0"
     
     // Compose BOM - manages all Compose library versions
     const val composeBom = "2024.02.00"
@@ -48,7 +48,7 @@ object Dependencies {
     const val kotlinxDatetime = "0.5.0"
     
     // Kotlinx Serialization
-    const val kotlinxSerialization = "1.6.2"
+    const val kotlinxSerialization = "1.7.3"
     
     // Charts
     const val vico = "1.13.1"
@@ -140,7 +140,7 @@ object Dependencies {
     // Kotlinx
     object Kotlinx {
         const val datetime = "org.jetbrains.kotlinx:kotlinx-datetime:0.5.0"
-        const val serialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2"
+        const val serialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3"
     }
     
     // Charts
