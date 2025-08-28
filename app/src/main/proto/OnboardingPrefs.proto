@@ -1,0 +1,74 @@
+syntax = "proto3";
+
+option java_package = "com.steadymate.app.data.proto";
+option java_multiple_files = true;
+
+// Onboarding preferences protobuf definition
+message OnboardingPrefs {
+  // Theme preferences
+  Theme theme = 1;
+  
+  // Consent preferences
+  ConsentSettings consent_settings = 2;
+  
+  // Notification preferences
+  NotificationSettings notification_settings = 3;
+  
+  // Onboarding flow completion status
+  OnboardingStatus onboarding_status = 4;
+}
+
+// Theme configuration
+message Theme {
+  enum ThemeMode {
+    THEME_MODE_UNSPECIFIED = 0;
+    LIGHT = 1;
+    DARK = 2;
+    SYSTEM = 3;
+  }
+  
+  ThemeMode mode = 1;
+  bool use_dynamic_colors = 2;
+  bool high_contrast_enabled = 3;
+  string accent_color = 4; // Hex color code
+}
+
+// Consent and privacy settings
+message ConsentSettings {
+  bool analytics_consent = 1;
+  bool crash_reporting_consent = 2;
+  bool marketing_consent = 3;
+  bool data_sharing_consent = 4;
+  int64 consent_timestamp = 5; // Unix timestamp when consent was given
+  string consent_version = 6; // Version of the consent form
+}
+
+// Notification preferences
+message NotificationSettings {
+  bool push_notifications_enabled = 1;
+  bool email_notifications_enabled = 2;
+  bool workout_reminders_enabled = 3;
+  bool progress_updates_enabled = 4;
+  bool achievement_alerts_enabled = 5;
+  
+  // Notification timing preferences
+  repeated int32 reminder_times = 6; // Hours of day (0-23) for reminders
+  bool quiet_hours_enabled = 7;
+  int32 quiet_start_hour = 8; // Start of quiet hours (0-23)
+  int32 quiet_end_hour = 9;   // End of quiet hours (0-23)
+}
+
+// Onboarding flow tracking
+message OnboardingStatus {
+  bool is_completed = 1;
+  int32 current_step = 2; // 0-based step index
+  int32 total_steps = 3;
+  int64 started_timestamp = 4; // When onboarding was started
+  int64 completed_timestamp = 5; // When onboarding was completed
+  
+  // Individual screen completion status
+  bool welcome_completed = 6;
+  bool permissions_completed = 7;
+  bool preferences_completed = 8;
+  bool profile_setup_completed = 9;
+}

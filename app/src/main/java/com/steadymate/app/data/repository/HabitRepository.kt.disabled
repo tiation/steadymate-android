@@ -1,0 +1,81 @@
+package com.steadymate.app.data.repository
+
+import com.steadymate.app.data.database.dao.HabitDao
+import com.steadymate.app.data.database.dao.HabitTickDao
+import com.steadymate.app.data.database.entities.toDomainModel
+import com.steadymate.app.data.database.entities.toEntity
+import com.steadymate.app.domain.model.Habit
+import com.steadymate.app.domain.model.HabitTick
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import javax.inject.Inject
+import javax.inject.Singleton
+
+/**
+ * Simple repository for managing habits and habit completions.
+ * Uses the simplified Habit/HabitTick model structure.
+ */
+@Singleton
+class HabitRepository @Inject constructor(
+    private val habitDao: HabitDao,
+    private val habitTickDao: HabitTickDao
+) {
+
+    // Basic habit operations
+    fun getEnabledHabitsFlow(): Flow<List<Habit>> {
+        return habitDao.getEnabledHabitsFlow().map { entities ->
+            entities.map { it.toDomainModel() }
+        }
+    }
+
+    suspend fun getEnabledHabits(): List<Habit> {
+        return habitDao.getEnabledHabits().map { it.toDomainModel() }
+    }
+
+    suspend fun getHabitById(habitId: String): Habit? {
+        return habitDao.getHabitById(habitId)?.toDomainModel()
+    }
+
+    suspend fun insertHabit(habit: Habit) {
+        habitDao.insertHabit(habit.toEntity())
+    }
+
+    suspend fun updateHabit(habit: Habit) {
+        habitDao.updateHabit(habit.toEntity())
+    }
+
+    suspend fun deleteHabit(habitId: String) {
+        habitDao.deleteHabitById(habitId)
+    }
+
+    suspend fun updateHabitEnabledStatus(habitId: String, enabled: Boolean) {
+        habitDao.updateHabitEnabledStatus(habitId, enabled)
+    }
+
+    // Habit completion operations  
+    suspend fun insertHabitTick(habitTick: HabitTick) {
+        habitTickDao.insertHabitTick(habitTick.toEntity())
+    }
+
+    suspend fun getHabitTickByDate(habitId: String, date: String): HabitTick? {
+        return habitTickDao.getHabitTickByDate(habitId, date)?.toDomainModel()
+    }
+
+    fun getHabitTicksFlow(habitId: String): Flow<List<HabitTick>> {
+        return habitTickDao.getHabitTicksByHabitFlow(habitId).map { entities ->
+            entities.map { it.toDomainModel() }
+        }
+    }
+
+    suspend fun getHabitTicksInDateRange(startDate: String, endDate: String): List<HabitTick> {
+        return habitTickDao.getHabitTicksInDateRange(startDate, endDate).map { it.toDomainModel() }
+    }
+
+    suspend fun getHabitCompletionCount(habitId: String): Int {
+        return habitTickDao.getHabitCompletionCount(habitId)
+    }
+
+    suspend fun getDailyCompletionCount(date: String): Int {
+        return habitTickDao.getDailyCompletionCount(date)
+    }
+}

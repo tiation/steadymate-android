@@ -1,0 +1,464 @@
+package com.steadymate.app.data.repository
+
+import com.steadymate.app.domain.model.*
+import com.steadymate.app.domain.repository.InsightsRepository
+import com.steadymate.app.domain.repository.MoodRepository
+import com.steadymate.app.domain.repository.TimeRange
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import kotlinx.datetime.*
+import javax.inject.Inject
+import javax.inject.Singleton
+import kotlin.math.abs
+import kotlin.math.roundToInt
+
+@Singleton
+class InsightsRepositoryImpl @Inject constructor(
+    private val moodRepository: MoodRepository
+) : InsightsRepository {
+
+    private val now get() = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+
+    override suspend fun generateInsights(userId: String, timeRange: TimeRange): List<Insight> {
+        val insights = mutableListOf<Insight>()
+        
+        try {
+            val statistics = getMoodStatistics(userId, timeRange)
+            val emotions = analyzeEmotions(userId, timeRange)
+            val activities = analyzeActivityCorrelations(userId, timeRange)
+            
+            // Generate mood trend insight
+            insights.add(generateMoodTrendInsight(statistics))
+            
+            // Generate emotion pattern insights
+            insights.addAll(generateEmotionInsights(emotions))
+            
+            // Generate activity correlation insights
+            insights.addAll(generateActivityInsights(activities))
+            
+            // Generate streak insights
+            insights.add(generateStreakInsight(statistics))
+            
+            // Generate improvement insights
+            if (statistics.improvementPercentage != 0.0) {
+                insights.add(generateImprovementInsight(statistics))
+            }
+            
+        } catch (e: Exception) {
+            // Log error and return empty list
+            // In production, you'd want proper error handling
+        }
+        
+        return insights.filter { it.confidence >= 0.5f } // Only return confident insights
+    }
+
+    override suspend fun getMoodStatistics(userId: String, timeRange: TimeRange): MoodStatistics {
+        val endDate = now
+        val startDate = endDate.date.minus(timeRange.days, DateTimeUnit.DAY).atTime(0, 0)
+        val entries = moodRepository.getMoodEntriesInDateRange(userId, startDate, endDate)
+        
+        if (entries.isEmpty()) {
+            return MoodStatistics(
+                totalEntries = 0,
+                averageMood = 0.0,
+                moodTrend = TrendDirection.STABLE,
+                bestMood = 0,
+                worstMood = 0,
+                mostCommonEmotions = emptyList(),
+                currentStreak = 0,
+                longestStreak = 0,
+                improvementPercentage = 0.0,
+                consistencyScore = 0.0,
+                period = timeRange.name
+            )
+        }
+        
+        val averageMood = entries.map { it.moodLevel }.average()
+        val bestMood = entries.maxOf { it.moodLevel }
+        val worstMood = entries.minOf { it.moodLevel }
+        
+        val emotionFrequency = entries.flatMap { it.emotionTags }
+            .groupingBy { it }
+            .eachCount()
+            .toList()
+            .sortedByDescending { it.second }
+            .take(5)
+            .map { it.first }
+        
+        val trend = calculateTrendDirection(entries)
+        val currentStreak = calculateCurrentStreak(userId)
+        val longestStreak = calculateLongestStreak(userId)
+        val improvement = calculateMoodImprovement(userId, timeRange)
+        val consistency = calculateConsistencyScore(userId, timeRange)
+        
+        return MoodStatistics(
+            totalEntries = entries.size,
+            averageMood = averageMood,
+            moodTrend = trend,
+            bestMood = bestMood,
+            worstMood = worstMood,
+            mostCommonEmotions = emotionFrequency,
+            currentStreak = currentStreak,
+            longestStreak = longestStreak,
+            improvementPercentage = improvement,
+            consistencyScore = consistency,
+            period = timeRange.name
+        )
+    }
+
+    override suspend fun getMoodTrendData(userId: String, timeRange: TimeRange): List<MoodTrendData> {
+        val endDate = now
+        val startDate = endDate.date.minus(timeRange.days, DateTimeUnit.DAY).atTime(0, 0)
+        val entries = moodRepository.getMoodEntriesInDateRange(userId, startDate, endDate)
+        
+        // Group entries by date and calculate daily averages
+        return entries.groupBy { it.timestamp.date }
+            .map { (date, dayEntries) ->
+                val averageMood = dayEntries.map { it.moodLevel }.average()
+                val dominantEmotion = dayEntries.flatMap { it.emotionTags }
+                    .groupingBy { it }
+                    .eachCount()
+                    .maxByOrNull { it.value }?.key
+                
+                MoodTrendData(
+                    date = date.atTime(12, 0), // Noon as default time
+                    averageMood = averageMood,
+                    entryCount = dayEntries.size,
+                    dominantEmotion = dominantEmotion
+                )
+            }
+            .sortedBy { it.date }
+    }
+
+    override fun getMoodTrendDataFlow(userId: String, timeRange: TimeRange): Flow<List<MoodTrendData>> {
+        val endDate = now
+        val startDate = endDate.date.minus(timeRange.days, DateTimeUnit.DAY).atTime(0, 0)
+        
+        return moodRepository.getMoodEntriesInDateRangeFlow(userId, startDate, endDate)
+            .map { entries ->
+                entries.groupBy { it.timestamp.date }
+                    .map { (date, dayEntries) ->
+                        val averageMood = dayEntries.map { it.moodLevel }.average()
+                        val dominantEmotion = dayEntries.flatMap { it.emotionTags }
+                            .groupingBy { it }
+                            .eachCount()
+                            .maxByOrNull { it.value }?.key
+                        
+                        MoodTrendData(
+                            date = date.atTime(12, 0),
+                            averageMood = averageMood,
+                            entryCount = dayEntries.size,
+                            dominantEmotion = dominantEmotion
+                        )
+                    }
+                    .sortedBy { it.date }
+            }
+    }
+
+    override suspend fun analyzeEmotions(userId: String, timeRange: TimeRange): List<EmotionAnalysis> {
+        val endDate = now
+        val startDate = endDate.date.minus(timeRange.days, DateTimeUnit.DAY).atTime(0, 0)
+        val entries = moodRepository.getMoodEntriesInDateRange(userId, startDate, endDate)
+        
+        if (entries.isEmpty()) return emptyList()
+        
+        val allEmotions = entries.flatMap { it.emotionTags }
+        val totalEmotions = allEmotions.size
+        
+        return allEmotions.groupingBy { it }
+            .eachCount()
+            .map { (emotion, count) ->
+                val entriesWithEmotion = entries.filter { emotion in it.emotionTags }
+                val averageMoodWithEmotion = entriesWithEmotion.map { it.moodLevel }.average()
+                val percentage = (count.toDouble() / totalEmotions) * 100
+                
+                // Calculate trend by comparing first and second half of period
+                val trend = calculateEmotionTrend(emotion, entries)
+                
+                EmotionAnalysis(
+                    emotion = emotion,
+                    frequency = count,
+                    percentage = percentage,
+                    averageMoodWhenPresent = averageMoodWithEmotion,
+                    trend = trend
+                )
+            }
+            .sortedByDescending { it.frequency }
+    }
+
+    override suspend fun analyzeActivityCorrelations(userId: String, timeRange: TimeRange): List<ActivityCorrelation> {
+        val endDate = now
+        val startDate = endDate.date.minus(timeRange.days, DateTimeUnit.DAY).atTime(0, 0)
+        val entries = moodRepository.getMoodEntriesInDateRange(userId, startDate, endDate)
+        
+        if (entries.isEmpty()) return emptyList()
+        
+        return entries.flatMap { it.activities }
+            .groupingBy { it }
+            .eachCount()
+            .map { (activity, count) ->
+                val entriesWithActivity = entries.filter { activity in it.activities }
+                val averageMood = entriesWithActivity.map { it.moodLevel }.average()
+                val impact = when {
+                    averageMood >= 8 -> MoodImpact.VERY_POSITIVE
+                    averageMood >= 6 -> MoodImpact.POSITIVE
+                    averageMood >= 4 -> MoodImpact.NEUTRAL
+                    averageMood >= 2 -> MoodImpact.NEGATIVE
+                    else -> MoodImpact.VERY_NEGATIVE
+                }
+                
+                ActivityCorrelation(
+                    activity = activity,
+                    occurrences = count,
+                    averageMood = averageMood,
+                    moodImpact = impact
+                )
+            }
+            .sortedByDescending { it.averageMood }
+    }
+
+    override suspend fun getWeeklySummary(userId: String, weekStart: LocalDateTime): WeeklySummary {
+        val weekEnd = weekStart.date.plus(7, DateTimeUnit.DAY).atTime(23, 59, 59)
+        val entries = moodRepository.getMoodEntriesInDateRange(userId, weekStart, weekEnd)
+        
+        val averageMood = if (entries.isEmpty()) 0.0 else entries.map { it.moodLevel }.average()
+        val topEmotions = entries.flatMap { it.emotionTags }
+            .groupingBy { it }
+            .eachCount()
+            .toList()
+            .sortedByDescending { it.second }
+            .take(3)
+            .map { it.first }
+        
+        val trend = calculateTrendDirection(entries)
+        val insights = generateInsights(userId, TimeRange.WEEK)
+        val streak = calculateCurrentStreak(userId)
+        
+        return WeeklySummary(
+            weekStart = weekStart,
+            weekEnd = weekEnd,
+            averageMood = averageMood,
+            totalEntries = entries.size,
+            streak = streak,
+            topEmotions = topEmotions,
+            moodTrend = trend,
+            insights = insights
+        )
+    }
+
+    override suspend fun calculateCurrentStreak(userId: String): Int {
+        val entries = moodRepository.getRecentMoodEntries(userId, 365) // Last year
+        if (entries.isEmpty()) return 0
+        
+        var streak = 0
+        var currentDate = now.date
+        
+        // Check consecutive days backwards from today
+        while (entries.any { it.timestamp.date == currentDate }) {
+            streak++
+            currentDate = currentDate.minus(1, DateTimeUnit.DAY)
+        }
+        
+        return streak
+    }
+
+    override suspend fun calculateLongestStreak(userId: String): Int {
+        val entries = moodRepository.getMoodEntriesByUser(userId)
+        if (entries.isEmpty()) return 0
+        
+        val uniqueDates = entries.map { it.timestamp.date }.toSet().sorted()
+        var longestStreak = 0
+        var currentStreak = 1
+        
+        for (i in 1 until uniqueDates.size) {
+            val daysDiff = uniqueDates[i].minus(uniqueDates[i-1]).days
+            if (daysDiff == 1) {
+                currentStreak++
+            } else {
+                longestStreak = maxOf(longestStreak, currentStreak)
+                currentStreak = 1
+            }
+        }
+        
+        return maxOf(longestStreak, currentStreak)
+    }
+
+    override suspend fun getChartData(userId: String, timeRange: TimeRange): List<ChartDataPoint> {
+        val trendData = getMoodTrendData(userId, timeRange)
+        
+        return trendData.mapIndexed { index, data ->
+            ChartDataPoint(
+                x = index.toFloat(),
+                y = data.averageMood.toFloat(),
+                date = data.date,
+                value = data.averageMood,
+                label = data.dominantEmotion
+            )
+        }
+    }
+
+    override suspend fun detectMoodPatterns(userId: String, timeRange: TimeRange): List<Insight> {
+        // This would implement pattern detection algorithms
+        // For now, return empty list - could be expanded with ML models
+        return emptyList()
+    }
+
+    override suspend fun calculateMoodImprovement(userId: String, timeRange: TimeRange): Double {
+        val endDate = now
+        val startDate = endDate.date.minus(timeRange.days, DateTimeUnit.DAY).atTime(0, 0)
+        val entries = moodRepository.getMoodEntriesInDateRange(userId, startDate, endDate)
+        
+        if (entries.size < 2) return 0.0
+        
+        val sortedEntries = entries.sortedBy { it.timestamp }
+        val firstHalf = sortedEntries.take(sortedEntries.size / 2)
+        val secondHalf = sortedEntries.drop(sortedEntries.size / 2)
+        
+        if (firstHalf.isEmpty() || secondHalf.isEmpty()) return 0.0
+        
+        val firstAverage = firstHalf.map { it.moodLevel }.average()
+        val secondAverage = secondHalf.map { it.moodLevel }.average()
+        
+        return ((secondAverage - firstAverage) / firstAverage) * 100
+    }
+
+    override suspend fun calculateConsistencyScore(userId: String, timeRange: TimeRange): Double {
+        val endDate = now
+        val startDate = endDate.date.minus(timeRange.days, DateTimeUnit.DAY).atTime(0, 0)
+        val entries = moodRepository.getMoodEntriesInDateRange(userId, startDate, endDate)
+        
+        if (entries.isEmpty()) return 0.0
+        
+        val uniqueDays = entries.map { it.timestamp.date }.toSet().size
+        val totalDays = timeRange.days
+        
+        return (uniqueDays.toDouble() / totalDays).coerceIn(0.0, 1.0)
+    }
+
+    // Helper methods
+    private fun calculateTrendDirection(entries: List<MoodEntry>): TrendDirection {
+        if (entries.size < 2) return TrendDirection.STABLE
+        
+        val sortedEntries = entries.sortedBy { it.timestamp }
+        val firstHalf = sortedEntries.take(sortedEntries.size / 2)
+        val secondHalf = sortedEntries.drop(sortedEntries.size / 2)
+        
+        if (firstHalf.isEmpty() || secondHalf.isEmpty()) return TrendDirection.STABLE
+        
+        val firstAverage = firstHalf.map { it.moodLevel }.average()
+        val secondAverage = secondHalf.map { it.moodLevel }.average()
+        val difference = secondAverage - firstAverage
+        
+        return when {
+            difference > 0.5 -> TrendDirection.IMPROVING
+            difference < -0.5 -> TrendDirection.DECLINING
+            else -> TrendDirection.STABLE
+        }
+    }
+    
+    private fun calculateEmotionTrend(emotion: String, entries: List<MoodEntry>): TrendDirection {
+        val entriesWithEmotion = entries.filter { emotion in it.emotionTags }
+        if (entriesWithEmotion.size < 2) return TrendDirection.STABLE
+        
+        val sortedEntries = entriesWithEmotion.sortedBy { it.timestamp }
+        val firstHalf = sortedEntries.take(sortedEntries.size / 2)
+        val secondHalf = sortedEntries.drop(sortedEntries.size / 2)
+        
+        val firstCount = firstHalf.size
+        val secondCount = secondHalf.size
+        
+        return when {
+            secondCount > firstCount -> TrendDirection.IMPROVING
+            secondCount < firstCount -> TrendDirection.DECLINING
+            else -> TrendDirection.STABLE
+        }
+    }
+
+    private fun generateMoodTrendInsight(statistics: MoodStatistics): Insight {
+        val trendText = when (statistics.moodTrend) {
+            TrendDirection.IMPROVING -> "Your mood has been improving"
+            TrendDirection.DECLINING -> "Your mood has been declining"
+            TrendDirection.STABLE -> "Your mood has been stable"
+            TrendDirection.FLUCTUATING -> "Your mood has been fluctuating"
+        }
+        
+        return Insight(
+            id = "mood_trend_${statistics.period}",
+            type = InsightType.MOOD_TREND,
+            title = "Mood Trend",
+            description = "$trendText over the past ${statistics.period.lowercase()}",
+            value = String.format("%.1f", statistics.averageMood),
+            trend = statistics.moodTrend,
+            confidence = 0.8f,
+            generatedAt = now,
+            actionable = statistics.moodTrend == TrendDirection.DECLINING,
+            recommendation = if (statistics.moodTrend == TrendDirection.DECLINING) 
+                "Consider talking to a mental health professional if this trend continues" else null
+        )
+    }
+    
+    private fun generateEmotionInsights(emotions: List<EmotionAnalysis>): List<Insight> {
+        return emotions.take(2).map { emotion ->
+            Insight(
+                id = "emotion_${emotion.emotion}",
+                type = InsightType.EMOTION_PATTERN,
+                title = "Top Emotion: ${emotion.emotion}",
+                description = "You've experienced '${emotion.emotion}' ${emotion.frequency} times (${emotion.percentage.roundToInt()}% of entries)",
+                value = "${emotion.frequency} times",
+                trend = emotion.trend,
+                confidence = 0.7f,
+                generatedAt = now
+            )
+        }
+    }
+    
+    private fun generateActivityInsights(activities: List<ActivityCorrelation>): List<Insight> {
+        return activities.take(1).map { activity ->
+            Insight(
+                id = "activity_${activity.activity}",
+                type = InsightType.ACTIVITY_CORRELATION,
+                title = "Best Activity: ${activity.activity}",
+                description = "Your mood averages ${String.format("%.1f", activity.averageMood)} when doing '${activity.activity}'",
+                value = String.format("%.1f", activity.averageMood),
+                trend = TrendDirection.STABLE,
+                confidence = 0.6f,
+                generatedAt = now,
+                actionable = true,
+                recommendation = "Try doing more '${activity.activity}' to boost your mood"
+            )
+        }
+    }
+    
+    private fun generateStreakInsight(statistics: MoodStatistics): Insight {
+        return Insight(
+            id = "streak_current",
+            type = InsightType.STREAK_ANALYSIS,
+            title = "Current Streak",
+            description = "You've tracked your mood for ${statistics.currentStreak} consecutive days",
+            value = "${statistics.currentStreak} days",
+            trend = TrendDirection.STABLE,
+            confidence = 1.0f,
+            generatedAt = now,
+            actionable = statistics.currentStreak == 0,
+            recommendation = if (statistics.currentStreak == 0) "Start tracking daily to build a streak!" else null
+        )
+    }
+    
+    private fun generateImprovementInsight(statistics: MoodStatistics): Insight {
+        val isImproving = statistics.improvementPercentage > 0
+        val absPercentage = abs(statistics.improvementPercentage)
+        
+        return Insight(
+            id = "improvement_${statistics.period}",
+            type = if (isImproving) InsightType.POSITIVE_PATTERN else InsightType.IMPROVEMENT_OPPORTUNITY,
+            title = if (isImproving) "Mood Improvement" else "Room for Improvement",
+            description = "Your mood has ${if (isImproving) "improved" else "declined"} by ${String.format("%.1f", absPercentage)}%",
+            value = "${String.format("%.1f", absPercentage)}%",
+            trend = if (isImproving) TrendDirection.IMPROVING else TrendDirection.DECLINING,
+            confidence = 0.8f,
+            generatedAt = now,
+            actionable = !isImproving,
+            recommendation = if (!isImproving) "Consider implementing daily self-care activities" else null
+        )
+    }
+}

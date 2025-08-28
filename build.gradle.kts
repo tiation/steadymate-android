@@ -1,16 +1,12 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 plugins {
-    id("com.android.application") version "8.2.2" apply false
-    id("org.jetbrains.kotlin.android") version "1.9.22" apply false
-    id("com.android.library") version "8.2.2" apply false
-    id("org.jetbrains.kotlin.plugin.compose") version "1.9.22" apply false
-}
-
-allprojects {
-    repositories {
-        google()
-        mavenCentral()
-    }
+    id("com.android.application") version Dependencies.agpVersion apply false
+    id("org.jetbrains.kotlin.android") version Dependencies.kotlinVersion apply false
+    id("com.android.library") version Dependencies.agpVersion apply false
+    id("com.google.dagger.hilt.android") version Dependencies.hilt apply false
+    id("com.google.protobuf") version Dependencies.protobufPlugin apply false
+    kotlin("kapt") version Dependencies.kotlinVersion apply false
+    kotlin("plugin.serialization") version Dependencies.kotlinVersion apply false
 }
 
 tasks.register("clean", Delete::class) {

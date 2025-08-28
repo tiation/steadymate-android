@@ -16,3 +16,13 @@ dependencyResolutionManagement {
 
 rootProject.name = "SteadyMate"
 include(":app")
+
+// Core modules - shared across features
+include(":core:common")
+include(":core:data")
+include(":core:domain")
+include(":core:ui")
+
+// Feature modules - specific app features
+include(":feature:home")
+include(":feature:checkin")

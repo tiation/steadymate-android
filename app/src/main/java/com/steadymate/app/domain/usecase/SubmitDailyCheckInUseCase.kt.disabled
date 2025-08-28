@@ -1,0 +1,117 @@
+package com.steadymate.app.domain.usecase
+
+import com.steadymate.app.domain.model.MoodEntry
+import com.steadymate.app.domain.repository.MoodRepository
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.CoroutineDispatcher
+import com.steadymate.app.di.DispatcherIO
+import javax.inject.Inject
+import javax.inject.Singleton
+
+/**
+ * Use case for submitting a daily mood check-in.
+ * Implements the 30-second check-in flow: mood score (0-10) + tags + optional note.
+ */
+@Singleton
+class SubmitDailyCheckInUseCase @Inject constructor(
+    private val moodRepository: MoodRepository,
+    @DispatcherIO private val ioDispatcher: CoroutineDispatcher
+) {
+    
+    /**
+     * Submits a daily mood check-in entry.
+     * @param score Mood score from 0-10
+     * @param tags Selected mood tags (e.g., "work", "sleep", "family")
+     * @param note Optional one-line note
+     * @return Result indicating success or failure
+     */
+    suspend operator fun invoke(
+        score: Int,
+        tags: List<String>,
+        note: String? = null
+    ): Result<Unit> = withContext(ioDispatcher) {
+        try {
+            // Validate input
+            require(score in 0..10) { "Mood score must be between 0 and 10" }
+            require(tags.isNotEmpty()) { "At least one tag must be selected" }
+            
+            // Create mood entry
+            val moodEntry = MoodEntry(
+                timestamp = System.currentTimeMillis(),
+                score = score,
+                tags = tags,
+                note = note?.takeIf { it.isNotBlank() }
+            )
+            
+            // Save to repository
+            moodRepository.insertMoodEntry(moodEntry)
+            
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * Checks if the user has already checked in today.
+     * @return true if already checked in today, false otherwise
+     */
+    suspend fun hasCheckedInToday(): Boolean = withContext(ioDispatcher) {
+        try {
+            val todayStart = getTodayStartTimestamp()
+            val todayEnd = getTodayEndTimestamp()
+            
+            val todayEntries = moodRepository.getMoodEntriesInRange(todayStart, todayEnd)
+            return@withContext todayEntries.isNotEmpty()
+        } catch (e: Exception) {
+            false
+        }
+    }
+    
+    /**
+     * Gets the current streak of consecutive check-ins.
+     * @return Number of consecutive days with check-ins
+     */
+    suspend fun getCurrentStreak(): Int = withContext(ioDispatcher) {
+        try {
+            val recentEntries = moodRepository.getRecentMoodEntries(30)
+            if (recentEntries.isEmpty()) return@withContext 0
+            
+            var streak = 0
+            val today = getTodayStartTimestamp()
+            var checkDate = today
+            
+            // Group entries by day
+            val entriesByDay = recentEntries.groupBy { entry ->
+                getDayFromTimestamp(entry.timestamp)
+            }
+            
+            // Count consecutive days with entries
+            while (entriesByDay.containsKey(getDayFromTimestamp(checkDate))) {
+                streak++
+                checkDate -= DAY_IN_MILLIS
+            }
+            
+            return@withContext streak
+        } catch (e: Exception) {
+            0
+        }
+    }
+    
+    private fun getTodayStartTimestamp(): Long {
+        val now = System.currentTimeMillis()
+        return now - (now % DAY_IN_MILLIS)
+    }
+    
+    private fun getTodayEndTimestamp(): Long {
+        return getTodayStartTimestamp() + DAY_IN_MILLIS - 1
+    }
+    
+    private fun getDayFromTimestamp(timestamp: Long): Long {
+        return timestamp / DAY_IN_MILLIS
+    }
+    
+    companion object {
+        private const val DAY_IN_MILLIS = 24 * 60 * 60 * 1000L
+    }
+}

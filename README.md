@@ -1,6 +1,6 @@
 # SteadyMate Android App
 
-A fast and beautiful Android application built with the latest technologies.
+A modern mental health companion app featuring daily habit tracking, mood insights, CBT exercises, crisis support resources and quick check-ins.
 
 ## Tech Stack
 
@@ -32,11 +32,14 @@ steadymate/
 
 ## Key Features
 
+- 🎯 **Habit & Routine Tracker**: Build and maintain healthy mental wellness habits
+- 📊 **Mood Journaling with Insights & Charts**: Track emotions with visual trend analysis
+- 🧠 **Guided CBT Tools & Exercises**: Cognitive Behavioral Therapy techniques and activities
+- 🆘 **One-tap Crisis Support Links**: Immediate access to mental health resources
+- ✅ **Daily Emotion Check-in Widgets**: Simple, quick mood logging interface
 - ✨ **Modern UI**: Built with Jetpack Compose and Material 3
 - 🎨 **Dynamic Theming**: Supports light/dark themes with dynamic colors (Android 12+)
-- 🚀 **Performance**: Optimized with latest Kotlin compiler and Compose BOM
-- 📱 **Responsive**: Adaptive design for all screen sizes
-- 🔧 **Developer Experience**: Kotlin DSL for type-safe build configuration
+- 📱 **Offline-first**: Local data storage with Room database and DataStore
 
 ## Dependencies
 

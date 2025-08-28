@@ -1,0 +1,110 @@
+package com.steadymate.app.data.repository
+
+import com.steadymate.app.data.database.dao.ReframeEntryDao
+import com.steadymate.app.data.database.entities.toDomainModel
+import com.steadymate.app.data.database.entities.toEntity
+import com.steadymate.app.di.DispatcherIO
+import com.steadymate.app.domain.model.ReframeEntry
+import com.steadymate.app.domain.repository.ReframeRepository
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
+import javax.inject.Inject
+import javax.inject.Singleton
+
+/**
+ * Implementation of ReframeRepository interface.
+ * Simplified CBT-lite tool: Situation → Thought → Evidence For/Against → Balanced thought.
+ */
+@Singleton
+class ReframeRepositoryImpl @Inject constructor(
+    private val reframeEntryDao: ReframeEntryDao,
+    @DispatcherIO private val ioDispatcher: CoroutineDispatcher
+) : ReframeRepository {
+
+    override fun getAllReframeEntriesFlow(): Flow<List<ReframeEntry>> {
+        return reframeEntryDao.getAllReframeEntriesFlow()
+            .map { entities -> entities.map { it.toDomainModel() } }
+    }
+
+    override suspend fun getAllReframeEntries(): List<ReframeEntry> {
+        return withContext(ioDispatcher) {
+            reframeEntryDao.getAllReframeEntries()
+                .map { it.toDomainModel() }
+        }
+    }
+
+    override suspend fun getReframeEntryById(entryId: String): ReframeEntry? {
+        return withContext(ioDispatcher) {
+            reframeEntryDao.getReframeEntryById(entryId)?.toDomainModel()
+        }
+    }
+
+    override suspend fun getReframeEntriesInRange(startTime: Long, endTime: Long): List<ReframeEntry> {
+        return withContext(ioDispatcher) {
+            reframeEntryDao.getReframeEntriesInRange(startTime, endTime)
+                .map { it.toDomainModel() }
+        }
+    }
+
+    override fun getReframeEntriesInRangeFlow(startTime: Long, endTime: Long): Flow<List<ReframeEntry>> {
+        return reframeEntryDao.getReframeEntriesInRangeFlow(startTime, endTime)
+            .map { entities -> entities.map { it.toDomainModel() } }
+    }
+
+    override suspend fun getRecentReframeEntries(limit: Int): List<ReframeEntry> {
+        return withContext(ioDispatcher) {
+            reframeEntryDao.getRecentReframeEntries(limit)
+                .map { it.toDomainModel() }
+        }
+    }
+
+    override suspend fun getReframeEntryCount(): Int {
+        return withContext(ioDispatcher) {
+            reframeEntryDao.getReframeEntryCount()
+        }
+    }
+
+    override suspend fun insertReframeEntry(reframeEntry: ReframeEntry) {
+        withContext(ioDispatcher) {
+            reframeEntryDao.insertReframeEntry(reframeEntry.toEntity())
+        }
+    }
+
+    override suspend fun insertReframeEntries(reframeEntries: List<ReframeEntry>) {
+        withContext(ioDispatcher) {
+            reframeEntryDao.insertReframeEntries(reframeEntries.map { it.toEntity() })
+        }
+    }
+
+    override suspend fun updateReframeEntry(reframeEntry: ReframeEntry) {
+        withContext(ioDispatcher) {
+            reframeEntryDao.updateReframeEntry(reframeEntry.toEntity())
+        }
+    }
+
+    override suspend fun deleteReframeEntry(reframeEntry: ReframeEntry) {
+        withContext(ioDispatcher) {
+            reframeEntryDao.deleteReframeEntry(reframeEntry.toEntity())
+        }
+    }
+
+    override suspend fun deleteReframeEntryById(entryId: String) {
+        withContext(ioDispatcher) {
+            reframeEntryDao.deleteReframeEntryById(entryId)
+        }
+    }
+
+    override suspend fun deleteAllReframeEntries() {
+        withContext(ioDispatcher) {
+            reframeEntryDao.deleteAllReframeEntries()
+        }
+    }
+
+    override suspend fun deleteReframeEntriesBefore(beforeTime: Long) {
+        withContext(ioDispatcher) {
+            reframeEntryDao.deleteReframeEntriesBefore(beforeTime)
+        }
+    }
+}

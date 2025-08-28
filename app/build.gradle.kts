@@ -1,17 +1,20 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
-    id("org.jetbrains.kotlin.plugin.compose")
+    id("com.google.dagger.hilt.android")
+    id("com.google.protobuf")
+    kotlin("kapt")
+    kotlin("plugin.serialization")
 }
 
 android {
     namespace = "com.steadymate.app"
-    compileSdk = 34
+    compileSdk = Dependencies.compileSdk
 
     defaultConfig {
         applicationId = "com.steadymate.app"
-        minSdk = 24
-        targetSdk = 34
+        minSdk = Dependencies.minSdk
+        targetSdk = Dependencies.targetSdk
         versionCode = 1
         versionName = "1.0"
 
@@ -45,7 +48,7 @@ android {
     }
     
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.8"
+        kotlinCompilerExtensionVersion = Dependencies.kotlinCompilerExtension
     }
     
     packaging {
@@ -55,34 +58,113 @@ android {
     }
 }
 
+// Protobuf configuration for DataStore
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:${Dependencies.protobuf}"
+    }
+    generateProtoTasks {
+        all().forEach { task ->
+            task.builtins {
+                create("java") {
+                    option("lite")
+                }
+            }
+        }
+    }
+}
+
 dependencies {
-    val composeBom = platform("androidx.compose:compose-bom:2024.02.00")
+    // Compose BOM - manages all Compose library versions
+    val composeBom = platform(Dependencies.Compose.bom)
     implementation(composeBom)
     androidTestImplementation(composeBom)
 
-    // Core Android
-    implementation("androidx.core:core-ktx:1.12.0")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
-    implementation("androidx.activity:activity-compose:1.8.2")
+    // Core AndroidX
+    implementation(Dependencies.AndroidX.coreKtx)
+    implementation(Dependencies.AndroidX.appcompat)
+    implementation(Dependencies.AndroidX.lifecycleRuntimeKtx)
+    implementation(Dependencies.AndroidX.lifecycleViewmodelCompose)
+    implementation(Dependencies.AndroidX.lifecycleRuntimeCompose)
+    implementation(Dependencies.AndroidX.activityCompose)
 
-    // Compose
-    implementation("androidx.compose.ui:ui")
-    implementation("androidx.compose.ui:ui-tooling-preview")
-    implementation("androidx.compose.material3:material3")
+    // Jetpack Compose
+    implementation(Dependencies.Compose.ui)
+    implementation(Dependencies.Compose.uiToolingPreview)
+    implementation(Dependencies.Compose.material3)
+    implementation(Dependencies.Compose.material3WindowSizeClass)
+    implementation(Dependencies.Compose.runtime)
+    implementation(Dependencies.Compose.runtimeLivedata)
+    implementation(Dependencies.Compose.foundation)
     
-    // Navigation
-    implementation("androidx.navigation:navigation-compose:2.7.6")
+    // Navigation Compose
+    implementation(Dependencies.Navigation.compose)
+    implementation(Dependencies.Navigation.hilt)
     
-    // ViewModel
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
+    // Accompanist
+    implementation(Dependencies.Accompanist.systemUiController)
+    implementation(Dependencies.Accompanist.permissions)
+    
+    // Hilt - Dependency Injection
+    implementation(Dependencies.Hilt.android)
+    kapt(Dependencies.Hilt.compiler)
+    implementation(Dependencies.Hilt.work)
+    
+    // Room - Database
+    implementation(Dependencies.Room.runtime)
+    implementation(Dependencies.Room.ktx)
+    implementation(Dependencies.Room.paging)
+    kapt(Dependencies.Room.compiler)
+    
+    // DataStore
+    implementation(Dependencies.DataStore.preferences)
+    implementation(Dependencies.DataStore.proto)
+    implementation(Dependencies.DataStore.protobufJavalite)
+    
+    // WorkManager
+    implementation(Dependencies.WorkManager.ktx)
+    implementation(Dependencies.WorkManager.hilt)
+    
+    // Coroutines & Flow
+    implementation(Dependencies.Coroutines.core)
+    implementation(Dependencies.Coroutines.android)
+    
+    // Kotlinx DateTime
+    implementation(Dependencies.Kotlinx.datetime)
+    
+    // Kotlinx Serialization
+    implementation(Dependencies.Kotlinx.serialization)
+    
+    // Charts - Vico
+    implementation(Dependencies.Charts.vicoCore)
+    implementation(Dependencies.Charts.vicoCompose)
+    implementation(Dependencies.Charts.vicoComposeM3)
 
-    // Testing
-    testImplementation("junit:junit:4.13.2")
-    androidTestImplementation("androidx.test.ext:junit:1.1.5")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
-    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+    // Testing - JUnit 5
+    testImplementation(Dependencies.Testing.junit5Jupiter)
+    testImplementation(Dependencies.Testing.junit5Vintage)
+    testImplementation(Dependencies.Testing.mockk)
+    testImplementation(Dependencies.Testing.turbine)
+    testImplementation(Dependencies.Testing.coroutinesTest)
     
-    // Debug
-    debugImplementation("androidx.compose.ui:ui-tooling")
-    debugImplementation("androidx.compose.ui:ui-test-manifest")
+    // Android Testing
+    androidTestImplementation(Dependencies.Testing.junit5AndroidTest)
+    androidTestImplementation(Dependencies.Testing.junit5AndroidRunner)
+    androidTestImplementation(Dependencies.Testing.junitAndroidX)
+    androidTestImplementation(Dependencies.Testing.mockkAndroid)
+    androidTestImplementation(Dependencies.Testing.espressoCore)
+    androidTestImplementation(Dependencies.Testing.testRunner)
+    androidTestImplementation(Dependencies.Testing.testRules)
+    androidTestImplementation(Dependencies.Testing.composeUiTest)
+    androidTestImplementation(Dependencies.Testing.uiAutomator)
+    
+    // WorkManager Testing
+    androidTestImplementation(Dependencies.WorkManager.testing)
+    
+    // Room Testing
+    testImplementation(Dependencies.Room.testing)
+    
+    // Debug tools
+    debugImplementation(Dependencies.Compose.uiTooling)
+    debugImplementation(Dependencies.Compose.uiTestManifest)
 }
