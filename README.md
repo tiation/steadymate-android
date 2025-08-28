@@ -11,6 +11,18 @@ A modern mental health companion app featuring daily habit tracking, mood insigh
 - **Target SDK 34** - Latest Android API level
 - **Minimum SDK 24** - Android 7.0+ support
 
+## Screenshots
+
+<table>
+  <tr>
+    <td><img src="docs/screenshots/app_screen_1.png" width="180"/></td>
+    <td><img src="docs/screenshots/app_screen_2.png" width="180"/></td>
+    <td><img src="docs/screenshots/app_screen_3.png" width="180"/></td>
+    <td><img src="docs/screenshots/app_screen_4.png" width="180"/></td>
+    <td><img src="docs/screenshots/app_screen_5.png" width="180"/></td>
+  </tr>
+</table>
+
 ## Project Structure
 
 ```
