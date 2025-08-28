@@ -30,6 +30,9 @@ import com.steadymate.app.ui.screens.crisis.CrisisScreen
 import com.steadymate.app.ui.screens.insights.InsightsScreen
 import com.steadymate.app.ui.screens.settings.SettingsScreen
 import com.steadymate.app.ui.screens.tools.ToolsScreen
+import com.steadymate.app.ui.screens.cbt.CBTReframeScreen
+import com.steadymate.app.ui.screens.cbt.CBTWorryTimerScreen
+import com.steadymate.app.ui.screens.cbt.CBTMicroWinsScreen
 
 /**
  * Main navigation composable for SteadyMate app
@@ -186,27 +189,21 @@ private fun SteadyMateNavHost(
             )
         }
         
-        // CBT Tool Screens - Coming Soon Placeholders
+        // CBT Tool Screens - Actual implementations
         composable("cbt_reframe") {
-            ComingSoonScreen(
-                title = "Thought Reframing",
-                description = "Challenge negative thoughts with evidence-based CBT techniques.",
+            CBTReframeScreen(
                 onNavigateBack = { navController.popBackStack() }
             )
         }
         
         composable("cbt_worry_timer") {
-            ComingSoonScreen(
-                title = "Worry Timer",
-                description = "Manage anxiety by setting dedicated worry time.",
+            CBTWorryTimerScreen(
                 onNavigateBack = { navController.popBackStack() }
             )
         }
         
         composable("cbt_micro_wins") {
-            ComingSoonScreen(
-                title = "Micro Wins",
-                description = "Track daily achievements and practice gratitude.",
+            CBTMicroWinsScreen(
                 onNavigateBack = { navController.popBackStack() }
             )
         }

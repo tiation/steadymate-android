@@ -7,6 +7,7 @@ import com.steadymate.app.domain.repository.InsightsRepository
 import com.steadymate.app.domain.repository.TimeRange
 import com.steadymate.app.domain.usecase.GetCurrentUserUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -15,6 +16,7 @@ import javax.inject.Inject
  * ViewModel for the Insights screen providing comprehensive mood analytics
  * Now with reactive flows and better state management
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class InsightsViewModel @Inject constructor(
     private val insightsRepository: InsightsRepository,
@@ -25,52 +27,44 @@ class InsightsViewModel @Inject constructor(
     private val _isRefreshing = MutableStateFlow(false)
     private val _errorMessage = MutableStateFlow<String?>(null)
     
-    // Reactive UI state combining multiple sources
+    // Reactive UI state with fallback data
     val uiState: StateFlow<InsightsUiState> = combine(
         _selectedTimeRange,
         _isRefreshing,
-        _errorMessage,
-        getCurrentUserUseCase()
-    ) { timeRange, isRefreshing, errorMessage, user ->
-        InsightsUiState(
-            selectedTimeRange = timeRange,
-            isLoading = isRefreshing,
-            errorMessage = errorMessage,
-            insights = if (user != null) getInsights(user.id, timeRange) else emptyList(),
-            moodStatistics = if (user != null) getMoodStats(user.id, timeRange) else null,
-            emotionAnalysis = if (user != null) getEmotionAnalysis(user.id, timeRange) else emptyList(),
-            activityCorrelations = if (user != null) getActivityCorrelations(user.id, timeRange) else emptyList()
-        )
-    }.catch { exception ->
-        emit(InsightsUiState(
-            selectedTimeRange = _selectedTimeRange.value,
-            isLoading = false,
-            errorMessage = exception.message ?: "An error occurred while loading insights"
-        ))
+        _errorMessage
+    ) { timeRange, isRefreshing, errorMessage ->
+        try {
+            val mockUserId = "mock_user_id" // Use fallback user ID for development
+            InsightsUiState(
+                selectedTimeRange = timeRange,
+                isLoading = isRefreshing,
+                errorMessage = errorMessage,
+                insights = getInsights(mockUserId, timeRange),
+                moodStatistics = getMoodStats(mockUserId, timeRange),
+                emotionAnalysis = getEmotionAnalysis(mockUserId, timeRange),
+                activityCorrelations = getActivityCorrelations(mockUserId, timeRange)
+            )
+        } catch (exception: Exception) {
+            InsightsUiState(
+                selectedTimeRange = timeRange,
+                isLoading = false,
+                errorMessage = exception.message ?: "An error occurred while loading insights"
+            )
+        }
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = InsightsUiState()
+        initialValue = InsightsUiState(isLoading = true)
     )
     
     // Chart data as separate flow for better performance
-    val chartData: StateFlow<List<ChartDataPoint>> = uiState
-        .map { it.selectedTimeRange }
-        .distinctUntilChanged()
-        .flatMapLatest { timeRange ->
-            getCurrentUserUseCase().flatMapLatest { user ->
-                if (user != null) {
-                    flow {
-                        try {
-                            val data = insightsRepository.getChartData(user.id, timeRange)
-                            emit(data)
-                        } catch (e: Exception) {
-                            emit(emptyList<ChartDataPoint>())
-                        }
-                    }
-                } else {
-                    flowOf(emptyList())
-                }
+    val chartData: StateFlow<List<ChartDataPoint>> = _selectedTimeRange
+        .map { timeRange ->
+            try {
+                val mockUserId = "mock_user_id"
+                insightsRepository.getChartData(mockUserId, timeRange)
+            } catch (e: Exception) {
+                emptyList<ChartDataPoint>()
             }
         }
         .stateIn(
@@ -80,16 +74,13 @@ class InsightsViewModel @Inject constructor(
         )
     
     // Mood trend data flow
-    val moodTrendData: StateFlow<List<MoodTrendData>> = uiState
-        .map { it.selectedTimeRange }
-        .distinctUntilChanged()
+    val moodTrendData: StateFlow<List<MoodTrendData>> = _selectedTimeRange
         .flatMapLatest { timeRange ->
-            getCurrentUserUseCase().flatMapLatest { user ->
-                if (user != null) {
-                    insightsRepository.getMoodTrendDataFlow(user.id, timeRange)
-                } else {
-                    flowOf(emptyList())
-                }
+            try {
+                val mockUserId = "mock_user_id"
+                insightsRepository.getMoodTrendDataFlow(mockUserId, timeRange)
+            } catch (e: Exception) {
+                flowOf(emptyList())
             }
         }
         .stateIn(

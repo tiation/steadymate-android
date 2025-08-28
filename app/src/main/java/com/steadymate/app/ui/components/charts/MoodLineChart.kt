@@ -30,6 +30,13 @@ import com.patrykandpatrick.vico.core.entry.FloatEntry
 import com.steadymate.app.domain.model.ChartDataPoint
 import com.steadymate.app.domain.repository.TimeRange
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 
 /**
  * Beautiful mood trend line chart component using Vico
@@ -132,6 +139,15 @@ fun MoodLineChart(
                             .padding(horizontal = 16.dp)
                     )
                 }
+            } else {
+                // Fallback when chart model is null
+                SimpleMoodChart(
+                    chartData = chartData,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(250.dp)
+                        .padding(horizontal = 16.dp)
+                )
             }
             
             // Chart legend/summary
@@ -188,5 +204,65 @@ private fun ChartSummaryItem(
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+    }
+}
+
+/**
+ * Simple fallback chart using Canvas when Vico fails
+ */
+@Composable
+private fun SimpleMoodChart(
+    chartData: List<ChartDataPoint>,
+    modifier: Modifier = Modifier
+) {
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val surfaceColor = MaterialTheme.colorScheme.surfaceVariant
+    
+    Box(
+        modifier = modifier
+            .background(surfaceColor.copy(alpha = 0.1f))
+            .padding(16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        if (chartData.isNotEmpty()) {
+            Canvas(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                val canvasWidth = size.width
+                val canvasHeight = size.height
+                val path = Path()
+                
+                val maxY = chartData.maxOfOrNull { it.y } ?: 10f
+                val minY = chartData.minOfOrNull { it.y } ?: 0f
+                val range = maxY - minY
+                
+                chartData.forEachIndexed { index, point ->
+                    val x = (index.toFloat() / (chartData.size - 1).coerceAtLeast(1)) * canvasWidth
+                    val y = canvasHeight - ((point.y - minY) / range.coerceAtLeast(1f)) * canvasHeight
+                    
+                    if (index == 0) {
+                        path.moveTo(x, y)
+                    } else {
+                        path.lineTo(x, y)
+                    }
+                }
+                
+                drawPath(
+                    path = path,
+                    color = primaryColor,
+                    style = Stroke(
+                        width = 4.dp.toPx(),
+                        cap = StrokeCap.Round
+                    )
+                )
+            }
+        } else {
+            Text(
+                text = "📊\nChart data is loading...",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
+        }
     }
 }
