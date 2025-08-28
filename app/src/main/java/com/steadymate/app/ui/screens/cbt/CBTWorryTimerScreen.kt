@@ -18,7 +18,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /**
  * CBT Worry Timer Screen - Guided worry time sessions to contain and process worries
@@ -803,40 +809,100 @@ data class WorryTimerUiState(
     val actionPlans: Map<String, ActionPlan> = emptyMap()
 )
 
-// Mock ViewModel (you'd implement the actual ViewModel)
-class CBTWorryTimerViewModel : androidx.lifecycle.ViewModel() {
+@HiltViewModel
+class CBTWorryTimerViewModel @Inject constructor() : ViewModel() {
     private val _uiState = mutableStateOf(WorryTimerUiState())
     val uiState: State<WorryTimerUiState> = _uiState
+    
+    private var timerJob: Job? = null
     
     fun setDuration(minutes: Int) {
         _uiState.value = _uiState.value.copy(selectedDuration = minutes)
     }
     
     fun startWorryTimer() {
-        // Implementation
+        val durationMs = _uiState.value.selectedDuration * 60 * 1000L
+        _uiState.value = _uiState.value.copy(
+            currentScreen = WorryTimerScreen.ACTIVE_WORRYING,
+            timerState = WorryTimerState.RUNNING,
+            timeRemaining = durationMs
+        )
+        
+        startCountdown()
+    }
+    
+    private fun startCountdown() {
+        timerJob?.cancel()
+        timerJob = viewModelScope.launch {
+            while (_uiState.value.timeRemaining > 0 && _uiState.value.timerState == WorryTimerState.RUNNING) {
+                delay(1000L)
+                val current = _uiState.value
+                val newTime = (current.timeRemaining - 1000L).coerceAtLeast(0L)
+                
+                _uiState.value = current.copy(timeRemaining = newTime)
+                
+                if (newTime == 0L) {
+                    completeWorryTime()
+                    break
+                }
+            }
+        }
     }
     
     fun toggleTimer() {
-        // Implementation
+        val current = _uiState.value
+        when (current.timerState) {
+            WorryTimerState.RUNNING -> {
+                _uiState.value = current.copy(timerState = WorryTimerState.PAUSED)
+                timerJob?.cancel()
+            }
+            WorryTimerState.PAUSED -> {
+                _uiState.value = current.copy(timerState = WorryTimerState.RUNNING)
+                startCountdown()
+            }
+            else -> { /* No-op */ }
+        }
     }
     
     fun addWorry(worry: String) {
-        // Implementation
+        val current = _uiState.value
+        _uiState.value = current.copy(
+            currentWorries = current.currentWorries + worry.trim()
+        )
     }
     
     fun completeWorryTime() {
-        // Implementation
+        timerJob?.cancel()
+        _uiState.value = _uiState.value.copy(
+            currentScreen = WorryTimerScreen.ACTION_PLANNING,
+            timerState = WorryTimerState.COMPLETED
+        )
     }
     
     fun addActionPlan(worry: String, plan: ActionPlan) {
-        // Implementation
+        val current = _uiState.value
+        _uiState.value = current.copy(
+            actionPlans = current.actionPlans + (worry to plan)
+        )
     }
     
     fun resetSession() {
-        // Implementation
+        timerJob?.cancel()
+        _uiState.value = WorryTimerUiState()
     }
     
     fun saveSession() {
-        // Implementation
+        // TODO: Implement session persistence to database
+        val current = _uiState.value
+        
+        println("Worry Timer Session Completed:")
+        println("Duration: ${current.selectedDuration} minutes")
+        println("Worries: ${current.currentWorries}")
+        println("Action plans: ${current.actionPlans}")
+    }
+    
+    override fun onCleared() {
+        super.onCleared()
+        timerJob?.cancel()
     }
 }

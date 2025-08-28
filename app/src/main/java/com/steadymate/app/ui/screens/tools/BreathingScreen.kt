@@ -138,6 +138,17 @@ fun BreathingScreen(
             )
 
             Spacer(modifier = Modifier.height(24.dp))
+            
+            // Audio Controls (when not active)
+            AudioControlsSection(
+                isSoundEnabled = uiState.isSoundEnabled,
+                soundVolume = uiState.soundVolume,
+                onToggleSound = viewModel::toggleSoundEnabled,
+                onVolumeChanged = viewModel::setSoundVolume,
+                modifier = Modifier.fillMaxWidth()
+            )
+            
+            Spacer(modifier = Modifier.height(24.dp))
         }
 
         // Control buttons
@@ -518,6 +529,88 @@ private fun MoodRatingSection(
                     onValueChange = { onAfterMoodChanged(it.toInt()) },
                     valueRange = 1f..10f,
                     steps = 8,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun AudioControlsSection(
+    isSoundEnabled: Boolean,
+    soundVolume: Float,
+    onToggleSound: () -> Unit,
+    onVolumeChanged: (Float) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(modifier = modifier) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text(
+                text = "Breathing Sound",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+            
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            // Sound toggle
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = if (isSoundEnabled) "🔊" else "🔇",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    
+                    Spacer(modifier = Modifier.width(12.dp))
+                    
+                    Text(
+                        text = "Enable breathing sounds",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                }
+                
+                Switch(
+                    checked = isSoundEnabled,
+                    onCheckedChange = { onToggleSound() }
+                )
+            }
+            
+            // Volume control (only show when sound is enabled)
+            if (isSoundEnabled) {
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Text(
+                    text = "Volume: ${(soundVolume * 100).toInt()}%",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                Slider(
+                    value = soundVolume,
+                    onValueChange = onVolumeChanged,
+                    valueRange = 0f..1f,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                Text(
+                    text = "Sound will automatically match your breathing rhythm",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                    textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
                 )
             }

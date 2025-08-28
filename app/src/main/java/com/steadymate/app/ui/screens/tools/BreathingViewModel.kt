@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.steadymate.app.domain.model.BreathingSession
 import com.steadymate.app.domain.model.BreathingPhase
 import com.steadymate.app.domain.repository.BreathingSessionRepository
+import com.steadymate.app.ui.utils.SoundManager
+import com.steadymate.app.ui.utils.getCycleDuration
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -19,7 +21,8 @@ import kotlinx.datetime.toLocalDateTime
 
 @HiltViewModel
 class BreathingViewModel @Inject constructor(
-    private val breathingSessionRepository: BreathingSessionRepository
+    private val breathingSessionRepository: BreathingSessionRepository,
+    private val soundManager: SoundManager
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(BreathingUiState())
@@ -45,6 +48,40 @@ class BreathingViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(moodAfter = mood)
     }
     
+    fun toggleSoundEnabled() {
+        val newSoundEnabled = !_uiState.value.isSoundEnabled
+        _uiState.value = _uiState.value.copy(isSoundEnabled = newSoundEnabled)
+        
+        if (!newSoundEnabled && _uiState.value.isActive) {
+            soundManager.stopSound()
+        } else if (newSoundEnabled && _uiState.value.isActive) {
+            startBreathingSound()
+        }
+    }
+    
+    fun setSoundVolume(volume: Float) {
+        soundManager.setVolume(volume)
+        _uiState.value = _uiState.value.copy(soundVolume = volume)
+    }
+    
+    private fun startBreathingSound() {
+        if (_uiState.value.isSoundEnabled && soundManager.isAudioAvailable) {
+            val cycleDuration = _uiState.value.exerciseType.getCycleDuration()
+            soundManager.adjustSpeedForExercise(cycleDuration)
+            soundManager.startBreathingSound()
+        }
+    }
+    
+    private fun pauseBreathingSound() {
+        if (_uiState.value.isSoundEnabled) {
+            soundManager.pauseSound()
+        }
+    }
+    
+    private fun stopBreathingSound() {
+        soundManager.stopSound()
+    }
+    
     fun startExercise() {
         val currentState = _uiState.value
         
@@ -57,16 +94,21 @@ class BreathingViewModel @Inject constructor(
             startTime = System.currentTimeMillis()
         )
         
+        // Start audio if enabled
+        startBreathingSound()
+        
         startBreathingCycle()
     }
     
     fun pauseExercise() {
         breathingJob?.cancel()
+        pauseBreathingSound()
         _uiState.value = _uiState.value.copy(isActive = false)
     }
     
     fun stopExercise() {
         breathingJob?.cancel()
+        stopBreathingSound()
         _uiState.value = _uiState.value.copy(
             isActive = false,
             currentPhase = BreathingPhase.COMPLETE,
@@ -147,6 +189,8 @@ class BreathingViewModel @Inject constructor(
                         isCompleted = true,
                         currentPhase = BreathingPhase.COMPLETE
                     )
+                    // Stop sound when exercise completes
+                    stopBreathingSound()
                     break
                 }
             }
@@ -180,6 +224,7 @@ class BreathingViewModel @Inject constructor(
     override fun onCleared() {
         super.onCleared()
         breathingJob?.cancel()
+        soundManager.release()
     }
 }
 
@@ -193,5 +238,8 @@ data class BreathingUiState(
     val exerciseType: BreathingExerciseType = BreathingExerciseType.BOX,
     val moodBefore: Int? = null,
     val moodAfter: Int? = null,
-    val startTime: Long? = null
+    val startTime: Long? = null,
+    // Audio-related properties
+    val isSoundEnabled: Boolean = true,
+    val soundVolume: Float = 0.7f
 )

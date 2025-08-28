@@ -603,7 +603,7 @@ private fun CBTToolsSection(
                     description = "Challenge negative thoughts",
                     icon = Icons.Default.Person,
                     color = MaterialTheme.colorScheme.primary,
-                    onClick = { onNavigateToCBT("cbt_reframe") },
+                    onClick = { onNavigateToCBT("reframe") },
                     modifier = Modifier.weight(1f)
                 )
                 
@@ -612,7 +612,7 @@ private fun CBTToolsSection(
                     description = "Manage anxiety & parking worries",
                     icon = Icons.Default.Settings,
                     color = MaterialTheme.colorScheme.secondary,
-                    onClick = { onNavigateToCBT("cbt_worry_timer") },
+                    onClick = { onNavigateToCBT("worry_timer") },
                     modifier = Modifier.weight(1f)
                 )
                 
@@ -621,7 +621,7 @@ private fun CBTToolsSection(
                     description = "Track gratitude & achievements",
                     icon = Icons.Default.Star,
                     color = MaterialTheme.colorScheme.tertiary,
-                    onClick = { onNavigateToCBT("cbt_micro_wins") },
+                    onClick = { onNavigateToCBT("micro_wins") },
                     modifier = Modifier.weight(1f)
                 )
             }

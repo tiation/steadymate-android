@@ -1,10 +1,27 @@
 package com.steadymate.app.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -48,12 +65,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.steadymate.app.ui.theme.accessibility.accessibleHeading
+import com.steadymate.app.ui.components.Achievement
+import com.steadymate.app.ui.components.AchievementRarity
+import com.steadymate.app.ui.components.AchievementShowcase
+import com.steadymate.app.ui.components.LevelProgress
+import com.steadymate.app.ui.components.StreakCounter
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -97,9 +121,28 @@ fun HomeScreen(
         
         Spacer(modifier = Modifier.height(24.dp))
         
-        // Progress Overview
-        ProgressOverviewSection(
-            streakCount = uiState.currentUser?.streakCount ?: 0,
+        // Streak Counter with celebration effects
+        StreakCounter(
+            streakCount = uiState.currentUser?.streakCount ?: 5,
+            showCelebration = false,
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        Spacer(modifier = Modifier.height(24.dp))
+        
+        // Level Progress
+        LevelProgress(
+            currentLevel = 12,
+            currentXP = 850,
+            xpToNextLevel = 1200,
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        Spacer(modifier = Modifier.height(24.dp))
+        
+        // Achievements Showcase
+        AchievementShowcase(
+            achievements = getSampleAchievements(),
             modifier = Modifier.fillMaxWidth()
         )
         
@@ -223,46 +266,118 @@ private fun QuickActionCard(
     color: Color,
     modifier: Modifier = Modifier
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val infiniteTransition = rememberInfiniteTransition(label = "shimmer")
+    
+    // Animated scale for press effect
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.95f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessHigh
+        ),
+        label = "press_scale"
+    )
+    
+    // Shimmer effect for icons
+    val shimmerAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.6f,
+        targetValue = 1.0f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(
+                durationMillis = 2000,
+                easing = FastOutSlowInEasing
+            ),
+            repeatMode = androidx.compose.animation.core.RepeatMode.Reverse
+        ),
+        label = "shimmer_alpha"
+    )
+    
     ElevatedCard(
         onClick = onClick,
-        modifier = modifier,
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 6.dp)
+        modifier = modifier
+            .clip(RoundedCornerShape(16.dp))
+            .border(
+                width = if (isPressed) 2.dp else 1.dp,
+                color = color.copy(alpha = if (isPressed) 0.8f else 0.3f),
+                shape = RoundedCornerShape(16.dp)
+            )
+            .scale(scale),
+        interactionSource = interactionSource,
+        elevation = CardDefaults.elevatedCardElevation(
+            defaultElevation = if (isPressed) 2.dp else 8.dp
+        ),
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.9f)
+        )
     ) {
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .background(
+                    brush = androidx.compose.ui.graphics.Brush.radialGradient(
+                        colors = listOf(
+                            color.copy(alpha = 0.1f),
+                            color.copy(alpha = 0.05f),
+                            androidx.compose.ui.graphics.Color.Transparent
+                        ),
+                        radius = 120f
+                    )
+                )
         ) {
-            Box(
+            Column(
                 modifier = Modifier
-                    .size(48.dp)
-                    .background(color, CircleShape),
-                contentAlignment = Alignment.Center
+                    .fillMaxWidth()
+                    .padding(20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    modifier = Modifier.size(24.dp),
-                    tint = MaterialTheme.colorScheme.onSurface
+                // Animated icon container with gradient
+                Box(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .background(
+                            brush = androidx.compose.ui.graphics.Brush.linearGradient(
+                                colors = listOf(
+                                    color.copy(alpha = 0.8f),
+                                    color.copy(alpha = 0.6f)
+                                )
+                            ),
+                            shape = CircleShape
+                        )
+                        .border(
+                            width = 2.dp,
+                            color = color.copy(alpha = shimmerAlpha),
+                            shape = CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        modifier = Modifier.size(28.dp),
+                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f)
+                    )
+                }
+                
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold
+                    ),
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                
+                Spacer(modifier = Modifier.height(4.dp))
+                
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
                 )
             }
-            
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleSmall.copy(
-                    fontWeight = FontWeight.SemiBold
-                ),
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
         }
     }
 }
@@ -446,52 +561,163 @@ private fun HabitChip(
     isCompleted: Boolean,
     onClick: () -> Unit
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val infiniteTransition = rememberInfiniteTransition(label = "habit_glow")
+    
+    // Scale animation for press effect
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.9f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessHigh
+        ),
+        label = "habit_press_scale"
+    )
+    
+    // Pulsing glow effect for completed habits
+    val glowAlpha by infiniteTransition.animateFloat(
+        initialValue = if (isCompleted) 0.3f else 0.0f,
+        targetValue = if (isCompleted) 0.8f else 0.0f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(
+                durationMillis = 1500,
+                easing = FastOutSlowInEasing
+            ),
+            repeatMode = androidx.compose.animation.core.RepeatMode.Reverse
+        ),
+        label = "habit_glow"
+    )
+    
+    // Rotation animation for emoji when completed
+    val rotation by animateFloatAsState(
+        targetValue = if (isCompleted) 360f else 0f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessVeryLow
+        ),
+        label = "emoji_celebration"
+    )
+    
     OutlinedCard(
         onClick = onClick,
-        modifier = Modifier.width(80.dp),
+        modifier = Modifier
+            .width(90.dp)
+            .clip(RoundedCornerShape(20.dp))
+            .border(
+                width = if (isCompleted) 2.dp else 1.dp,
+                brush = androidx.compose.ui.graphics.Brush.linearGradient(
+                    colors = if (isCompleted) {
+                        listOf(
+                            MaterialTheme.colorScheme.primary.copy(alpha = glowAlpha),
+                            MaterialTheme.colorScheme.secondary.copy(alpha = glowAlpha * 0.7f)
+                        )
+                    } else {
+                        listOf(
+                            MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                            MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
+                        )
+                    }
+                ),
+                shape = RoundedCornerShape(20.dp)
+            )
+            .scale(scale),
+        interactionSource = interactionSource,
         colors = CardDefaults.outlinedCardColors(
             containerColor = if (isCompleted) 
-                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f)
             else 
                 MaterialTheme.colorScheme.surface
         ),
-        border = CardDefaults.outlinedCardBorder().copy(
-            brush = if (isCompleted)
-                androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
-            else
-                androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
+        elevation = CardDefaults.outlinedCardElevation(
+            defaultElevation = if (isCompleted) 4.dp else 1.dp
         )
     ) {
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .background(
+                    brush = if (isCompleted) {
+                        androidx.compose.ui.graphics.Brush.radialGradient(
+                            colors = listOf(
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                                androidx.compose.ui.graphics.Color.Transparent
+                            ),
+                            radius = 100f
+                        )
+                    } else {
+                        androidx.compose.ui.graphics.Brush.linearGradient(
+                            colors = listOf(
+                                androidx.compose.ui.graphics.Color.Transparent,
+                                androidx.compose.ui.graphics.Color.Transparent
+                            )
+                        )
+                    }
+                )
         ) {
-            Text(
-                text = emoji,
-                style = MaterialTheme.typography.headlineSmall
-            )
-            
-            Spacer(modifier = Modifier.height(4.dp))
-            
-            Text(
-                text = name,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            Icon(
-                imageVector = if (isCompleted) Icons.Default.CheckCircle else Icons.Outlined.FavoriteBorder,
-                contentDescription = if (isCompleted) "Completed" else "Not completed",
-                modifier = Modifier.size(16.dp),
-                tint = if (isCompleted) 
-                    MaterialTheme.colorScheme.primary 
-                else 
-                    MaterialTheme.colorScheme.outline
-            )
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Animated emoji with rotation
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(
+                            color = if (isCompleted) 
+                                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                            else
+                                androidx.compose.ui.graphics.Color.Transparent
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = emoji,
+                        style = MaterialTheme.typography.headlineSmall,
+                        modifier = Modifier.rotate(rotation)
+                    )
+                }
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                Text(
+                    text = name,
+                    style = MaterialTheme.typography.labelMedium.copy(
+                        fontWeight = if (isCompleted) FontWeight.Bold else FontWeight.Medium
+                    ),
+                    color = if (isCompleted) 
+                        MaterialTheme.colorScheme.primary 
+                    else 
+                        MaterialTheme.colorScheme.onSurface
+                )
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                // Animated completion indicator with scale effect
+                val iconScale by animateFloatAsState(
+                    targetValue = if (isCompleted) 1.2f else 1.0f,
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessHigh
+                    ),
+                    label = "completion_icon_scale"
+                )
+                
+                Icon(
+                    imageVector = if (isCompleted) Icons.Default.CheckCircle else Icons.Outlined.FavoriteBorder,
+                    contentDescription = if (isCompleted) "Completed" else "Not completed",
+                    modifier = Modifier
+                        .size(18.dp)
+                        .scale(iconScale),
+                    tint = if (isCompleted) 
+                        MaterialTheme.colorScheme.primary 
+                    else 
+                        MaterialTheme.colorScheme.outline.copy(alpha = 0.6f)
+                )
+            }
         }
     }
 }
@@ -703,3 +929,68 @@ data class HabitItem(
     val name: String,
     val isCompleted: Boolean
 )
+
+/**
+ * Sample achievements for demo purposes
+ */
+@Composable
+private fun getSampleAchievements(): List<Achievement> = remember {
+    listOf(
+        Achievement(
+            id = "first_checkin",
+            title = "First Steps",
+            description = "Complete your first check-in",
+            icon = Icons.Default.Favorite,
+            isUnlocked = true,
+            rarity = AchievementRarity.COMMON
+        ),
+        Achievement(
+            id = "week_streak",
+            title = "Committed",
+            description = "Maintain a 7-day streak",
+            icon = Icons.Default.Star,
+            isUnlocked = true,
+            rarity = AchievementRarity.RARE
+        ),
+        Achievement(
+            id = "mindful_master",
+            title = "Mindful Master",
+            description = "Complete 50 meditation sessions",
+            icon = Icons.Default.Person,
+            isUnlocked = false,
+            progress = 32f,
+            maxProgress = 50f,
+            rarity = AchievementRarity.EPIC
+        ),
+        Achievement(
+            id = "wellness_warrior",
+            title = "Wellness Warrior",
+            description = "Achieve 30-day perfect streak",
+            icon = Icons.Default.Star,
+            isUnlocked = false,
+            progress = 5f,
+            maxProgress = 30f,
+            rarity = AchievementRarity.LEGENDARY
+        ),
+        Achievement(
+            id = "mood_tracker",
+            title = "Mood Tracker",
+            description = "Log mood for 14 consecutive days",
+            icon = Icons.Default.Favorite,
+            isUnlocked = false,
+            progress = 8f,
+            maxProgress = 14f,
+            rarity = AchievementRarity.RARE
+        ),
+        Achievement(
+            id = "healing_journey",
+            title = "Healing Journey",
+            description = "Complete all CBT exercises",
+            icon = Icons.Default.Settings,
+            isUnlocked = false,
+            progress = 3f,
+            maxProgress = 10f,
+            rarity = AchievementRarity.EPIC
+        )
+    )
+}

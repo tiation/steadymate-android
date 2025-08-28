@@ -133,7 +133,7 @@ private fun SteadyMateNavHost(
 ) {
     NavHost(
         navController = navController,
-        startDestination = "habits",
+        startDestination = "home",
         modifier = modifier
     ) {
         // Main habits screen - WORKING
@@ -148,7 +148,11 @@ private fun SteadyMateNavHost(
                 onNavigateToTools = { navController.navigate("tools") },
                 onNavigateToCrisis = { navController.navigate("crisis") },
                 onNavigateToCBT = { cbtType -> 
-                    // TODO: Navigate to specific CBT screen based on type
+                    when (cbtType) {
+                        "reframe" -> navController.navigate("cbt_reframe")
+                        "worry_timer" -> navController.navigate("cbt_worry_timer")
+                        "micro_wins" -> navController.navigate("cbt_micro_wins")
+                    }
                 }
             )
         }
@@ -156,7 +160,11 @@ private fun SteadyMateNavHost(
         composable("tools") {
             ToolsScreen(
                 onNavigateToCBT = { cbtType ->
-                    // TODO: Navigate to specific CBT screen based on type
+                    when (cbtType) {
+                        "reframe" -> navController.navigate("cbt_reframe")
+                        "worry_timer" -> navController.navigate("cbt_worry_timer")
+                        "micro_wins" -> navController.navigate("cbt_micro_wins")
+                    }
                 }
             )
         }
@@ -176,6 +184,31 @@ private fun SteadyMateNavHost(
         
         composable("checkin") {
             CheckInScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+        
+        // CBT Tool Screens - Coming Soon Placeholders
+        composable("cbt_reframe") {
+            ComingSoonScreen(
+                title = "Thought Reframing",
+                description = "Challenge negative thoughts with evidence-based CBT techniques.",
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+        
+        composable("cbt_worry_timer") {
+            ComingSoonScreen(
+                title = "Worry Timer",
+                description = "Manage anxiety by setting dedicated worry time.",
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+        
+        composable("cbt_micro_wins") {
+            ComingSoonScreen(
+                title = "Micro Wins",
+                description = "Track daily achievements and practice gratitude.",
                 onNavigateBack = { navController.popBackStack() }
             )
         }

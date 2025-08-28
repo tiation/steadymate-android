@@ -16,11 +16,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
+import kotlinx.datetime.minus
+import kotlinx.datetime.DateTimeUnit
+import javax.inject.Inject
 
 /**
  * CBT Micro Wins Screen - Daily gratitude and achievement tracking (Three Good Things exercise)
@@ -61,7 +68,7 @@ fun CBTMicroWinsScreen(
                 
                 IconButton(onClick = viewModel::showHistory) {
                     Icon(
-                        imageVector = Icons.Default.DateRange,
+                        imageVector = Icons.Default.List,
                         contentDescription = "View History"
                     )
                 }
@@ -70,7 +77,7 @@ fun CBTMicroWinsScreen(
         
         // Content
         when (uiState.currentView) {
-            MicroWinsView.DAILY_ENTRY -> {
+            MicroWinsViewState.DAILY_ENTRY -> {
                 DailyEntryScreen(
                     todayEntry = uiState.todayEntry,
                     isLoading = uiState.isLoading,
@@ -79,7 +86,7 @@ fun CBTMicroWinsScreen(
                     onEditEntry = viewModel::editTodayEntry
                 )
             }
-            MicroWinsView.HISTORY -> {
+            MicroWinsViewState.HISTORY -> {
                 HistoryScreen(
                     entries = uiState.pastEntries,
                     onBackToToday = viewModel::showDailyEntry,
@@ -188,7 +195,7 @@ private fun IntroductionCard() {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Icon(
-                imageVector = Icons.Default.Favorite,
+                imageVector = Icons.Default.Face,
                 contentDescription = null,
                 modifier = Modifier.size(64.dp),
                 tint = MaterialTheme.colorScheme.onSecondaryContainer
@@ -450,47 +457,45 @@ private fun CompletedWinItem(
     index: Int,
     win: MicroWin
 ) {
-    Column {
-        Row(
-            verticalAlignment = Alignment.Top
+    Row(
+        verticalAlignment = Alignment.Top
+    ) {
+        Surface(
+            modifier = Modifier.size(24.dp),
+            shape = RoundedCornerShape(12.dp),
+            color = MaterialTheme.colorScheme.primary
         ) {
-            Surface(
-                modifier = Modifier.size(24.dp),
-                shape = RoundedCornerShape(12.dp),
-                color = MaterialTheme.colorScheme.primary
+            Box(
+                contentAlignment = Alignment.Center
             ) {
-                Box(
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = index.toString(),
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
-                }
-            }
-            
-            Spacer(modifier = Modifier.width(12.dp))
-            
-            Column {
                 Text(
-                    text = win.description,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                    text = index.toString(),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimary
                 )
+            }
+        }
+        
+        Spacer(modifier = Modifier.width(12.dp))
+        
+        Column {
+            Text(
+                text = win.description,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+            
+            if (win.reflection.isNotBlank()) {
+                Spacer(modifier = Modifier.height(4.dp))
                 
-                if (win.reflection.isNotBlank()) {
-                    Spacer(modifier = Modifier.height(4.dp))
-                    
-                    Text(
-                        text = win.reflection,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
-                        modifier = Modifier.padding(start = 8.dp)
-                    )
-                }
+                Text(
+                    text = win.reflection,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
+                    modifier = Modifier.padding(start = 8.dp)
+                )
             }
         }
     }
@@ -593,7 +598,7 @@ private fun HistoryScreen(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Icon(
-                            imageVector = Icons.Default.DateRange,
+                            imageVector = Icons.Default.List,
                             contentDescription = null,
                             modifier = Modifier.size(64.dp),
                             tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
@@ -646,7 +651,7 @@ private fun HistoryEntryCard(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = entry.date.toString(), // You'd format this properly
+                    text = entry.date.toString(),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.weight(1f)
@@ -746,7 +751,7 @@ private fun HistoryWinItem(
 }
 
 // Data classes and enums
-enum class MicroWinsView {
+enum class MicroWinsViewState {
     DAILY_ENTRY,
     HISTORY
 }
@@ -762,39 +767,127 @@ data class MicroWinsEntry(
 )
 
 data class MicroWinsUiState(
-    val currentView: MicroWinsView = MicroWinsView.DAILY_ENTRY,
+    val currentView: MicroWinsViewState = MicroWinsViewState.DAILY_ENTRY,
     val todayEntry: MicroWinsEntry? = null,
     val pastEntries: List<MicroWinsEntry> = emptyList(),
     val currentStreak: Int = 0,
     val isLoading: Boolean = false
 )
 
-// Mock ViewModel (you'd implement the actual ViewModel)
-class CBTMicroWinsViewModel : androidx.lifecycle.ViewModel() {
+@HiltViewModel
+class CBTMicroWinsViewModel @Inject constructor() : ViewModel() {
     private val _uiState = mutableStateOf(MicroWinsUiState())
     val uiState: State<MicroWinsUiState> = _uiState
     
+    // Sample data - in real implementation this would come from repository/database
+    private val _entries = mutableMapOf<LocalDate, MicroWinsEntry>()
+    
+    init {
+        loadTodayEntry()
+        calculateStreak()
+    }
+    
+    private fun loadTodayEntry() {
+        val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+        val todayEntry = _entries[today]
+        _uiState.value = _uiState.value.copy(todayEntry = todayEntry)
+    }
+    
+    private fun calculateStreak(): Int {
+        val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+        var streak = 0
+        var checkDate = today
+        
+        // Count consecutive days backwards from today
+        while (_entries.containsKey(checkDate)) {
+            streak++
+            checkDate = checkDate.minus(1, DateTimeUnit.DAY)
+        }
+        
+        _uiState.value = _uiState.value.copy(currentStreak = streak)
+        return streak
+    }
+    
     fun saveDailyEntry(entry: MicroWinsEntry) {
-        // Implementation: save to database, update streak
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true)
+            
+            try {
+                // Simulate saving to database
+                delay(500L)
+                
+                _entries[entry.date] = entry
+                
+                val newStreak = calculateStreak()
+                _uiState.value = _uiState.value.copy(
+                    todayEntry = entry,
+                    currentStreak = newStreak,
+                    isLoading = false
+                )
+                
+                println("Micro Wins Entry Saved: ${entry.date}")
+                entry.wins.forEachIndexed { index, win ->
+                    println("${index + 1}. ${win.description}")
+                    if (win.reflection.isNotBlank()) {
+                        println("   Reflection: ${win.reflection}")
+                    }
+                }
+                
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(isLoading = false)
+                println("Error saving entry: ${e.message}")
+            }
+        }
     }
     
     fun editTodayEntry() {
-        // Implementation: allow editing today's entry
+        _uiState.value = _uiState.value.copy(todayEntry = null)
     }
     
     fun showHistory() {
-        _uiState.value = _uiState.value.copy(currentView = MicroWinsView.HISTORY)
+        val sortedEntries = _entries.values.sortedByDescending { it.date }
+        _uiState.value = _uiState.value.copy(
+            currentView = MicroWinsViewState.HISTORY,
+            pastEntries = sortedEntries
+        )
     }
     
     fun showDailyEntry() {
-        _uiState.value = _uiState.value.copy(currentView = MicroWinsView.DAILY_ENTRY)
+        _uiState.value = _uiState.value.copy(currentView = MicroWinsViewState.DAILY_ENTRY)
     }
     
     fun deleteEntry(entry: MicroWinsEntry) {
-        // Implementation: delete entry and recalculate streak
+        _entries.remove(entry.date)
+        val newStreak = calculateStreak()
+        val sortedEntries = _entries.values.sortedByDescending { it.date }
+        
+        _uiState.value = _uiState.value.copy(
+            pastEntries = sortedEntries,
+            currentStreak = newStreak
+        )
+        
+        println("Deleted entry for ${entry.date}")
     }
     
     fun exportEntry() {
-        // Implementation: export/share functionality
+        val todayEntry = _uiState.value.todayEntry
+        if (todayEntry != null) {
+            val exportText = buildString {
+                appendLine("My Three Good Things - ${todayEntry.date}")
+                appendLine()
+                todayEntry.wins.forEachIndexed { index, win ->
+                    appendLine("${index + 1}. ${win.description}")
+                    if (win.reflection.isNotBlank()) {
+                        appendLine("   Why it mattered: ${win.reflection}")
+                    }
+                    appendLine()
+                }
+                appendLine("Generated by SteadyMate")
+            }
+            
+            // In real implementation, you'd use Android's sharing intent
+            println("Export Text:")
+            println(exportText)
+        }
     }
 }
