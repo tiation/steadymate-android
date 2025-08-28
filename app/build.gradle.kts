@@ -18,8 +18,8 @@ android {
         applicationId = "com.steadymate.app"
         minSdk = Dependencies.minSdk
         targetSdk = Dependencies.targetSdk
-        versionCode = 5
-        versionName = "4.1.0"
+        versionCode = 6
+        versionName = "4.2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
